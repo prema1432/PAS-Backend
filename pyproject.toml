@@ -1,11 +1,39 @@
 [project]
 name = "pas-backend"
-version = "0.1.0"
-description = "PAS Backend API"
+version = "0.2.0"
+description = "PAS Backend API with Supabase integration"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]",
+    "supabase>=2.9.1",
+    "pydantic-settings>=2.6.1",
 ]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.0.1",
+    "pytest>=8.3.4",
+    "ruff>=0.9.0",
+]
+
+[tool.setuptools]
+packages = ["app", "app.api", "app.api.routes", "app.services", "app.static"]
+
+[tool.setuptools.package-data]
+"app.static" = ["*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = ["B008"]  # B008: function call in argument defaults - required for FastAPI Depends()
 
 [tool.fastapi]
 entrypoint = "main:app"

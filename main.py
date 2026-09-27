@@ -1,41 +1,9 @@
-"""PAS Backend - FastAPI application entrypoint."""
+"""Compatibility shim so FastAPI Cloud can boot `main:app`.
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+The real application lives in the `app` package (app/main.py). This file only
+re-exports it; add nothing here.
+"""
 
-app = FastAPI(
-    title="PAS Backend",
-    description="Backend API for PAS",
-    version="0.1.0",
-)
+from app.main import app
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.get("/")
-def root() -> dict:
-    """Service info root endpoint."""
-    return {
-        "name": "PAS Backend",
-        "version": "0.1.0",
-        "status": "ok",
-        "docs": "/docs",
-    }
-
-
-@app.get("/health")
-def health() -> dict:
-    """Health check endpoint for monitoring."""
-    return {"status": "healthy"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None) -> dict:
-    """Example endpoint returning a single item."""
-    return {"item_id": item_id, "q": q}
+__all__ = ["app"]
