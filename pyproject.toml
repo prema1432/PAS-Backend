@@ -1,23 +1,33 @@
 [project]
 name = "pas-backend"
-version = "0.2.0"
+# The release version has exactly one source: app/__init__.py.__version__, read
+# at build time. Bump it there (and run `make lock`) — never here.
+dynamic = ["version"]
 description = "PAS Backend API with Supabase integration"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]",
     "supabase>=2.9.1",
     "pydantic-settings>=2.6.1",
+    "email-validator>=2.2.0",
+    "cryptography>=50.0.1",
 ]
 
 [dependency-groups]
 dev = [
     "pre-commit>=4.0.1",
     "pytest>=8.3.4",
+    "pytest-cov>=7.0.0",
     "ruff>=0.9.0",
 ]
 
-[tool.setuptools]
-packages = ["app", "app.api", "app.api.routes", "app.services", "app.static"]
+# Discover the package tree instead of listing it, so a new app/modules/<name>/
+# feature folder is packaged (and deployed) without touching pyproject.toml.
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "app.__version__"}
 
 [tool.setuptools.package-data]
 "app.static" = ["*.html"]
@@ -25,6 +35,23 @@ packages = ["app", "app.api", "app.api.routes", "app.services", "app.static"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+
+[tool.coverage.run]
+# Coverage is measured over the application only; the tests are not the subject.
+source = ["app"]
+
+[tool.coverage.report]
+# 100% is enforced: `make verify` fails the gate on a single uncovered line.
+# See the "Tests and coverage" section of CLAUDE.md.
+fail_under = 100
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "@(abc\\.)?abstractmethod",
+]
 
 [tool.ruff]
 line-length = 100
@@ -36,4 +63,6 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 ignore = ["B008"]  # B008: function call in argument defaults - required for FastAPI Depends()
 
 [tool.fastapi]
-entrypoint = "main:app"
+# The ASGI entrypoint lives with the application, not in a root shim. FastAPI
+# Cloud, `fastapi run` and uvicorn all accept the same `module:attr` form.
+entrypoint = "app.main:app"

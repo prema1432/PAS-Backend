@@ -1,4 +1,15 @@
-"""Smoke tests for core endpoints and the todos CRUD (Supabase stubbed)."""
+"""Smoke tests for core endpoints and auth."""
+
+import pytest
+from fastapi.testclient import TestClient
+
+from app.core.clients.supabase import SupabaseNotConfiguredError
+from app.core.config import settings
+from app.core.dependencies import get_current_client
+from app.main import app
+
+#: Data routes live on the versioned API surface; tests spell the prefix out.
+API = settings.api_prefix
 
 
 def test_root_serves_dashboard(client):
@@ -9,70 +20,95 @@ def test_root_serves_dashboard(client):
     assert "<script" in response.text
 
 
+def test_dashboard_has_no_todo_ui(client):
+    """The todos feature is gone: no markup, copy or API calls should remain."""
+    html = client.get("/").text
+    assert "todo" not in html.lower()
+    assert "/todos" not in html
+    assert "task" not in html.lower()
+
+
+def test_dashboard_exposes_the_new_sidebar_views(client):
+    """API keys and Billing are reachable from the sidebar."""
+    html = client.get("/").text
+    for marker in ["view-apikeys", "view-billing", "API keys", "Billing", "Auto-recharge"]:
+        assert marker in html
+
+
 def test_info(client):
     response = client.get("/info")
     assert response.status_code == 200
     body = response.json()
     assert body["name"] == "PAS Backend"
     assert body["status"] == "ok"
-    assert body["docs"] == "/docs"
+    # The docs link is only advertised when docs auth is configured.
+    assert body["docs"] in (None, "/docs")
+
+
+def test_info_advertises_docs_when_enabled(client, monkeypatch):
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "docs_username", "docs-admin")
+    monkeypatch.setattr(settings, "docs_password", "s3cret-docs")
+    assert client.get("/info").json()["docs"] == "/docs"
 
 
 def test_health(client):
     response = client.get("/health")
     assert response.status_code == 200
-    body = response.json()
-    assert body["status"] == "healthy"
+    assert response.json()["status"] == "healthy"
 
 
-def test_read_item(client):
-    response = client.get("/items/7?q=hello")
+def test_todos_endpoint_is_gone(client):
+    """The router was removed, so the path no longer exists."""
+    assert client.get("/todos").status_code == 404
+
+
+@pytest.fixture()
+def anon_client():
+    """Client without the current-user override: requests are unauthenticated."""
+    app.dependency_overrides[get_current_client] = lambda: None
+    yield TestClient(app)
+    app.dependency_overrides.pop(get_current_client, None)
+
+
+def test_me_requires_auth(anon_client):
+    assert anon_client.get(f"{API}/auth/me").status_code == 401
+
+
+def test_auth_me_returns_override_user(client):
+    response = client.get(f"{API}/auth/me")
     assert response.status_code == 200
-    assert response.json() == {"item_id": 7, "q": "hello"}
+    assert response.json()["email"] == "test@example.com"
 
 
-def test_list_todos(client, fake_todos):
-    response = client.get("/todos")
-    assert response.status_code == 200
-    assert response.json() == fake_todos
+def test_current_client_is_bound_to_the_callers_access_token(monkeypatch):
+    """`get_current_client` must hand PostgREST the caller's JWT, not the shared one."""
+    import app.core.dependencies as dependencies
+    from app.modules.auth.session import Session
+
+    seen: list[str] = []
+    monkeypatch.setattr(dependencies, "get_client_for_token", seen.append)
+
+    session = Session(user_id="user-1", email="user@example.com", access_token="the-jwt")
+    dependencies.get_current_client(session)
+
+    assert seen == ["the-jwt"]
 
 
-def test_create_todo(client, fake_todos):
-    response = client.post("/todos", json={"title": "New task"})
-    assert response.status_code == 201
-    created = response.json()
-    assert created["title"] == "New task"
-    assert created["completed"] is False
-    assert len(fake_todos) == 3
+def test_missing_supabase_configuration_is_a_clean_503(client):
+    """A deploy without credentials answers 503 rather than a raw 500."""
 
+    def unconfigured():
+        raise SupabaseNotConfiguredError("Supabase is not configured. Set SUPABASE_URL.")
 
-def test_create_todo_rejects_empty_title(client):
-    response = client.post("/todos", json={"title": ""})
-    assert response.status_code == 422
+    app.dependency_overrides[get_current_client] = unconfigured
+    try:
+        response = client.get(f"{API}/customers")
+    finally:
+        app.dependency_overrides.pop(get_current_client, None)
 
-
-def test_update_todo(client, fake_todos):
-    response = client.patch("/todos/1", json={"completed": True})
-    assert response.status_code == 200
-    assert response.json()["completed"] is True
-
-
-def test_update_todo_not_found(client):
-    response = client.patch("/todos/999", json={"completed": True})
-    assert response.status_code == 404
-
-
-def test_update_todo_no_fields(client):
-    response = client.patch("/todos/1", json={})
-    assert response.status_code == 400
-
-
-def test_delete_todo(client, fake_todos):
-    response = client.delete("/todos/2")
-    assert response.status_code == 204
-    assert len(fake_todos) == 1
-
-
-def test_delete_todo_not_found(client):
-    response = client.delete("/todos/999")
-    assert response.status_code == 404
+    assert response.status_code == 503
+    assert "Supabase is not configured" in response.json()["detail"]
+    # The shared handler is reused, so nothing leaked as a server error.
+    assert response.headers["x-content-type-options"] == "nosniff"

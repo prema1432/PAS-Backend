@@ -1,4 +1,9 @@
 # See https://pre-commit.com for more information
+#
+# `make verify` runs this file with --all-files, so every hook here is part of
+# the gate CI runs. The local hooks below are repository rules, not style
+# preferences: each one is the enforcement of a numbered rule in AGENTS.md, and
+# each has a matching `make` target for a manual run.
 repos:
   # Basic file hygiene
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -8,16 +13,62 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-toml
+      - id: check-json
+      # Every .py parses: catches a half-applied refactor before pytest does.
+      - id: check-ast
       - id: check-added-large-files
       - id: check-merge-conflict
       - id: check-case-conflict
+      # One line ending in the repo, so a diff is always a real change.
+      - id: mixed-line-ending
+        args: [--fix=lf]
       - id: debug-statements
       - id: detect-private-key
 
   # Ruff: lint + format (auto-fixes on save of the hook run)
+  # Keep this rev in step with the `ruff` version pinned in uv.lock - the
+  # Makefile's lint/format targets use the same version from .venv.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.5
+    rev: v0.16.9
     hooks:
       - id: ruff-check
         args: [--fix]
       - id: ruff-format
+
+  # Repository rules. `language: python` keeps the checks hermetic (stdlib only,
+  # no dependency on .venv being installed); each script is also runnable by hand
+  # and covered by tests/test_precommit_scripts.py.
+  - repo: local
+    hooks:
+      # AGENTS.md rule 1: never commit .env or any real secret. Unlike a
+      # `git grep` over tracked files, this sees the files being added *now*,
+      # and it refuses a staged .env by name.
+      - id: no-credentials
+        name: no committed credentials
+        entry: python scripts/check_credentials.py
+        language: python
+        always_run: true
+        pass_filenames: false
+
+      # AGENTS.md rule 2: data routes use get_current_client (RLS as the caller);
+      # create_client lives only in app/core/supabase.py.
+      - id: client-boundaries
+        name: Supabase client boundaries
+        entry: python scripts/check_client_boundaries.py
+        language: python
+        files: ^app/.*\.py$
+
+      # AGENTS.md rule 5: the /api/<version> prefix comes from the registry.
+      - id: api-prefix
+        name: API prefix from the registry
+        entry: python scripts/check_api_prefix.py
+        language: python
+        files: ^app/.*\.py$
+
+      # app/static/index.html is the whole dashboard: a syntax error there breaks
+      # every button silently, and no other check would catch it.
+      - id: inline-js
+        name: inline JavaScript parses
+        entry: python scripts/check_inline_js.py
+        language: python
+        files: ^app/static/.*\.html$

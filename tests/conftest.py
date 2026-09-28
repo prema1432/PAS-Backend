@@ -3,96 +3,139 @@
 import pytest
 from fastapi.testclient import TestClient
 
+import app.main as main_module
+from app.core.clients.supabase import get_supabase_client
+from app.core.dependencies import get_current_client, get_current_user
 from app.main import app
-from app.services.supabase_client import get_supabase_client
+from tests.fakes import FakeSupabaseClient, WriteEmptyClient, WriteErrorClient
+
+TEST_USER = {"id": "test-user-0001", "email": "test@example.com"}
+OTHER_USER_ID = "other-user"
 
 
-class FakeResponse:
-    """Stand-in for supabase PostgrestAPIResponse."""
+@pytest.fixture(autouse=True)
+def fresh_rate_limiters():
+    """Give every test a clean request budget.
 
-    def __init__(self, data):
-        self.data = data
-
-
-class FakeTable:
-    """In-memory stand-in for the supabase `todos` table builder."""
-
-    def __init__(self, todos: list):
-        self._todos = todos
-        self._filters: dict = {}
-        self._payload: dict | None = None
-
-    def select(self, *_):
-        return self
-
-    def order(self, *_):
-        return self
-
-    def insert(self, payload: dict):
-        self._payload = payload
-        return self
-
-    def update(self, payload: dict):
-        self._payload = payload
-        return self
-
-    def delete(self):
-        self._payload = {"__delete__": True}
-        return self
-
-    def eq(self, column: str, value):
-        self._filters[column] = value
-        return self
-
-    def execute(self):
-        if self._payload and self._payload.get("__delete__"):
-            before = len(self._todos)
-            self._todos[:] = [t for t in self._todos if t["id"] != self._filters.get("id")]
-            return FakeResponse(self._todos[: before - len(self._todos)])
-        if self._payload and self._filters:
-            updated = []
-            for todo in self._todos:
-                if todo["id"] == self._filters.get("id"):
-                    todo.update(self._payload)
-                    updated.append(todo)
-            return FakeResponse(updated)
-        if self._payload:  # insert
-            todo = {"id": max((t["id"] for t in self._todos), default=0) + 1, **self._payload}
-            self._todos.append(todo)
-            return FakeResponse([todo])
-        # select
-        if "id" in self._filters:
-            return FakeResponse([t for t in self._todos if t["id"] == self._filters["id"]])
-        return FakeResponse(list(self._todos))
-
-
-class FakeSupabaseClient:
-    """Stand-in for the supabase Client: `.table(name)` returns a builder."""
-
-    def __init__(self, todos: list):
-        self._todos = todos
-
-    def table(self, name: str) -> FakeTable:
-        return FakeTable(self._todos)
+    The rate limiters are module-level and keyed by client IP, while TestClient
+    always presents the same address — without this, a long test session would
+    trip the limit and unrelated tests would start seeing 429s.
+    """
+    main_module.default_limiter.reset()
+    main_module.auth_limiter.reset()
+    yield
+    main_module.default_limiter.reset()
+    main_module.auth_limiter.reset()
 
 
 @pytest.fixture()
-def fake_todos():
-    """Seed data shared by the fake table and assertions."""
-    return [
-        {"id": 1, "title": "First", "completed": False},
-        {"id": 2, "title": "Second", "completed": True},
-    ]
+def stores():
+    """In-memory table data shared with assertions."""
+    return {
+        "login_events": [
+            {
+                "id": 1,
+                "user_id": TEST_USER["id"],
+                "ip": "203.0.113.9",
+                "ip_version": "IPv4",
+                "city": "Bengaluru",
+                "region": "Karnataka",
+                "country": "India",
+                "country_code": "IN",
+                "browser": "Chrome",
+                "browser_version": "141.0.0.0",
+                "os": "macOS",
+                "device_type": "Desktop",
+                "is_bot": False,
+                "created_at": "2026-09-27T18:00:00+00:00",
+                "user_agent": "Mozilla/5.0 (Macintosh) Chrome/141.0.0.0",
+            },
+            {
+                "id": 2,
+                "user_id": OTHER_USER_ID,
+                "ip": "198.51.100.4",
+                "browser": "Firefox",
+                "is_bot": False,
+                "created_at": "2026-09-27T19:00:00+00:00",
+            },
+        ],
+        "customers": [
+            {
+                "id": 1,
+                "name": "Ada Lovelace",
+                "email": "ada@example.com",
+                "phone": "+919876543210",
+                "otp": "123456",
+                "is_active": True,
+                "plan": "free",
+                "remaining_minutes": 120,
+                "auto_recharge": False,
+                "auto_recharge_amount": 0,
+                "auto_recharge_minutes": 0,
+                "user_id": TEST_USER["id"],
+            },
+            {
+                "id": 2,
+                "name": "Other Owner Customer",
+                "email": "other@example.com",
+                "phone": "+919000000000",
+                "otp": "654321",
+                "is_active": True,
+                "plan": "paid",
+                "remaining_minutes": 500,
+                "auto_recharge": False,
+                "auto_recharge_amount": 0,
+                "auto_recharge_minutes": 0,
+                "user_id": OTHER_USER_ID,
+            },
+        ],
+        "providers": [],
+        "provider_models": [],
+        "api_keys": [],
+        "payments": [],
+        "customer_sessions": [],
+        "audit_logs": [],
+    }
 
 
 @pytest.fixture()
-def client(monkeypatch, fake_todos):
-    """TestClient with get_supabase_client overridden to the in-memory fake."""
-    client_stub = FakeSupabaseClient(fake_todos)
+def fake_customers(stores):
+    """Customers owned by the test user."""
+    return stores["customers"]
 
-    def fake_get_client():
-        return client_stub
 
-    app.dependency_overrides[get_supabase_client] = fake_get_client
+@pytest.fixture()
+def client(stores):
+    """TestClient with Supabase and current-user dependencies overridden."""
+    client_stub = FakeSupabaseClient(stores)
+    app.dependency_overrides[get_supabase_client] = lambda: client_stub
+    app.dependency_overrides[get_current_client] = lambda: client_stub
+    app.dependency_overrides[get_current_user] = lambda: TEST_USER
     yield TestClient(app)
     app.dependency_overrides.pop(get_supabase_client, None)
+    app.dependency_overrides.pop(get_current_client, None)
+    app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.fixture()
+def empty_writes(client, stores):
+    """Reads work, writes come back empty — the routers' "didn't land" 500 path."""
+    stub = WriteEmptyClient(stores)
+    app.dependency_overrides[get_current_client] = lambda: stub
+    return stub
+
+
+@pytest.fixture()
+def write_error(client, stores):
+    """Install a data client whose writes raise, and hand back the installer.
+
+    Usage: ``error = write_error(RuntimeError("duplicate key ..."))``. Reads keep
+    working, so a test can seed state and then make exactly the write fail.
+    """
+
+    def install(error: Exception) -> Exception:
+        stub = WriteErrorClient(stores, error)
+        app.dependency_overrides[get_current_client] = lambda: stub
+        return error
+
+    return install
