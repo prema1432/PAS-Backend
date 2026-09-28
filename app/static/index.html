@@ -432,8 +432,7 @@
           refresh token.
         </p>
         <div class="cta">
-          <button class="btn primary" id="cta-signup">Create free account</button>
-          <button class="btn" id="cta-signin">I already have an account</button>
+          <button class="btn primary" id="cta-signin">Sign in to your account</button>
         </div>
       </div>
       <div class="features">
@@ -1050,7 +1049,7 @@
       <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" required />
       <label for="auth-password">Password</label>
       <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password" minlength="8" required />
-      <p class="field-hint" id="password-hint" hidden>At least 8 characters. Stored only as a bcrypt hash by Supabase.</p>
+      <p class="field-hint" id="password-hint" hidden>Stored only as a bcrypt hash by Supabase.</p>
       <p class="form-error" id="auth-error"></p>
       <button class="btn primary full" type="submit" id="auth-submit">Sign in</button>
     </form>
@@ -2588,17 +2587,9 @@
     }
 
     /* ---------- auth ---------- */
-    let modalMode = "signin";
-    function openAuth(mode) {
-      modalMode = mode;
-      const isSignup = mode === "signup";
-      $("auth-title").textContent = isSignup ? "Create your account" : "Welcome back";
-      $("auth-sub").textContent = isSignup
-        ? "Sign up with email and a password to get started."
-        : "Sign in to your account to continue.";
-      $("auth-submit").textContent = isSignup ? "Create account" : "Sign in";
-      $("password-hint").hidden = !isSignup;
-      $("auth-password").autocomplete = isSignup ? "new-password" : "current-password";
+    function openAuth() {
+      $("auth-title").textContent = "Welcome back";
+      $("auth-sub").textContent = "Sign in to your account to continue.";
       $("auth-error").textContent = "";
       $("auth-form").reset();
       $("auth-modal").showModal();
@@ -2613,15 +2604,14 @@
       submit.disabled = true;
       $("auth-error").textContent = "";
       try {
-        const endpoint = modalMode === "signup" ? "signup" : "login";
-        const user = await api(`/auth/${endpoint}`, {
+        const user = await api("/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
         });
         $("auth-modal").close();
         setSignedIn(user);
-        toast(modalMode === "signup" ? "Account created — welcome!" : `Welcome back, ${user.email}`);
+        toast(`Welcome back, ${user.email}`);
       } catch (err) {
         $("auth-error").textContent = err.message;
       } finally {
@@ -2738,9 +2728,8 @@
     });
     // Keep the "token renews in …" copy honest between refreshes.
     setInterval(showTokenState, 30000);
-    $("signin-open").addEventListener("click", () => openAuth("signin"));
-    $("cta-signup").addEventListener("click", () => openAuth("signup"));
-    $("cta-signin").addEventListener("click", () => openAuth("signin"));
+    $("signin-open").addEventListener("click", openAuth);
+    $("cta-signin").addEventListener("click", openAuth);
     $("auth-form").addEventListener("submit", submitAuth);
     // No X close button by design: the modal closes via Esc (native) or a
     // press on the dimmed backdrop.

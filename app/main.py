@@ -43,7 +43,7 @@ from app.modules.auth.session import clear_session_cookies
 # /portal/login belongs here: the customer's phone + OTP pair is a credential
 # too, and the portal router additionally checks the limiter itself so a guess
 # is metered even when the middleware budget is not the one that fires.
-_SENSITIVE_SUFFIXES = ("/auth/login", "/auth/signup", "/portal/login", "/portal/me")
+_SENSITIVE_SUFFIXES = ("/auth/login", "/portal/login", "/portal/me")
 
 
 def _limiter_for(path: str):

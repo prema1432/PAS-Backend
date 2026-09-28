@@ -103,13 +103,6 @@ class FakeAuth:
         self.signed_up: list[str] = []
         self.admin = FakeAdmin(self.revoked)
 
-    def sign_up(self, credentials: dict) -> FakeAuthResponse:
-        email = credentials["email"]
-        if email == "taken@example.com":
-            raise RuntimeError("User already registered")
-        self.signed_up.append(email)
-        return FakeAuthResponse(None, FakeUser("new-user", email))
-
     def sign_in_with_password(self, credentials: dict) -> FakeAuthResponse:
         if credentials["password"] == "wrong-password":
             raise RuntimeError("Invalid login credentials")
@@ -255,53 +248,18 @@ def test_logout_revokes_the_session_and_drops_both_cookies(auth_client):
     assert client.get(f"{API}/auth/me").status_code == 401
 
 
-# --- sign-up ---------------------------------------------------------------
+# --- sign-up is gone ---------------------------------------------------------
 
 
-def test_signup_creates_the_account_and_signs_the_user_in(auth_client):
+def test_signup_is_gone(auth_client):
+    """Accounts are provisioned in Supabase; the API no longer signs anyone up."""
     client, fake = auth_client
     response = client.post(
         f"{API}/auth/signup", json={"email": "new@example.com", "password": "password123"}
     )
 
-    assert response.status_code == 201
-    assert fake.signed_up == ["new@example.com"]
-    body = response.json()
-    assert body["id"] == "new-user"
-    assert body["email"] == "new@example.com"
-    # Signing up leaves the user with a session, not just an account.
-    assert response.cookies[ACCESS_TOKEN_COOKIE]
-    assert response.cookies[REFRESH_TOKEN_COOKIE] == "refresh-1"
-    assert client.get(f"{API}/auth/me").status_code == 200
-
-
-def test_signup_rejects_an_email_that_is_already_registered(auth_client):
-    client, fake = auth_client
-    response = client.post(
-        f"{API}/auth/signup", json={"email": "taken@example.com", "password": "password123"}
-    )
-
-    assert response.status_code == 400
-    assert "already registered" in response.json()["detail"]
+    assert response.status_code in (404, 405)
     assert fake.signed_up == []
-    assert response.cookies.get(ACCESS_TOKEN_COOKIE) is None
-
-
-def test_signup_awaiting_email_confirmation_is_403(auth_client, monkeypatch):
-    """The account exists but cannot start a session until the email is confirmed."""
-    client, _ = auth_client
-
-    def unconfirmed(*args, **kwargs):
-        raise auth_service.InvalidCredentialsError("Email not confirmed")
-
-    monkeypatch.setattr(auth_router, "sign_in", unconfirmed)
-    response = client.post(
-        f"{API}/auth/signup", json={"email": "new@example.com", "password": "password123"}
-    )
-
-    assert response.status_code == 403
-    assert "Confirm your email" in response.json()["detail"]
-    # No cookies: there is no session behind that account yet.
     assert response.cookies.get(ACCESS_TOKEN_COOKIE) is None
 
 

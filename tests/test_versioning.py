@@ -151,7 +151,7 @@ def test_auth_paths_keep_the_tighter_rate_limit_under_the_prefix():
     """
     import app.main as main_module
 
-    for suffix in ("/auth/login", "/auth/signup", "/portal/login", "/portal/me"):
+    for suffix in ("/auth/login", "/portal/login", "/portal/me"):
         assert (
             main_module._limiter_for(f"{settings.api_prefix}{suffix}") is main_module.auth_limiter
         )

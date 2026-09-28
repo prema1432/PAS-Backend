@@ -158,7 +158,6 @@ PUBLIC_PATHS = frozenset(
         "/info",
         "/health",
         f"{settings.api_prefix}/auth/login",
-        f"{settings.api_prefix}/auth/signup",
         f"{settings.api_prefix}/auth/logout",
         # The customer portal: phone + OTP is the credential, no session needed.
         f"{settings.api_prefix}/portal/login",

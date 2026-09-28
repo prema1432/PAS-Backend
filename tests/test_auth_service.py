@@ -13,7 +13,6 @@ from app.modules.auth.service import (
     get_user_from_token,
     refresh_session,
     sign_in,
-    sign_up,
 )
 
 
@@ -53,9 +52,6 @@ class FakeAuth:
             raise self.error
         return self.response
 
-    def sign_up(self, credentials):
-        return self._reply()
-
     def sign_in_with_password(self, credentials):
         return self._reply()
 
@@ -69,26 +65,6 @@ class FakeAuth:
 class FakeClient:
     def __init__(self, auth: FakeAuth) -> None:
         self.auth = auth
-
-
-# --- sign-up ---------------------------------------------------------------
-
-
-def test_sign_up_returns_the_new_user_id():
-    auth = FakeAuth(FakeResponse(user=FakeUser("new-user")))
-    assert sign_up("a@b.c", "password123", FakeClient(auth)) == "new-user"
-
-
-def test_sign_up_maps_a_rejected_password():
-    auth = FakeAuth(error=RuntimeError("Password should be at least 6 characters"))
-    with pytest.raises(InvalidCredentialsError, match="at least 6"):
-        sign_up("a@b.c", "short", FakeClient(auth))
-
-
-def test_sign_up_without_a_user_is_rejected():
-    auth = FakeAuth(FakeResponse(user=None))
-    with pytest.raises(InvalidCredentialsError, match="Sign-up failed"):
-        sign_up("a@b.c", "password123", FakeClient(auth))
 
 
 # --- sign-in ---------------------------------------------------------------

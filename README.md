@@ -19,7 +19,7 @@ FastAPI application with Supabase integration, ready for deployment to FastAPI C
 │   ├── modules/            # One self-contained package per feature
 │   │   ├── registry.py     # MODULES — every router the app mounts
 │   │   ├── system/         # /, /info, /health, docs
-│   │   ├── auth/           # sign-up/in/refresh/out, session cookies, login events
+│   │   ├── auth/           # sign-in/refresh/out, session cookies, login events
 │   │   ├── customers/      # customers, OTPs, plans, recharges
 │   │   ├── providers/      # LLM catalogue + models + preference order
 │   │   ├── api_keys/       # provider keys (encrypted at rest)

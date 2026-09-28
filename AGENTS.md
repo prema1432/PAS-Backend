@@ -37,7 +37,7 @@ Prefer `make`: `make help` lists every target and nothing needs activating.
 5. New endpoints: add a module package under `app/modules/<module>/` (router with its own `prefix`/`tags` — the `/api/v1` prefix comes from the registry, never hard-code it; explicit Pydantic models in its `schemas.py`, logic in its `service.py`), register the router in `app/modules/registry.py`, and put docstrings on the handlers.
 6. New env vars: update `app/core/config.py`, `.env.example`, and document in CLAUDE.md.
 7. Auth: resolve the caller via `get_current_user` (cookie-based). Never store or log passwords; Supabase Auth hashes them. Scope every DB row to `user_id` and keep RLS enabled.
-   - Every new endpoint must authenticate unless it is `/`, `/info`, `/health`, `/auth/login`, `/auth/signup` or `/auth/logout`. `tests/test_security.py` sweeps the OpenAPI schema and asserts an anonymous caller gets 401 from every other route, so a new route is covered automatically.
+   - Every new endpoint must authenticate unless it is `/`, `/info`, `/health`, `/auth/login` or `/auth/logout`. `tests/test_security.py` sweeps the OpenAPI schema and asserts an anonymous caller gets 401 from every other route, so a new route is covered automatically.
    - Docs routes are intentionally disabled without `DOCS_USERNAME`/`DOCS_PASSWORD`; do not re-enable FastAPI's default `docs_url`/`openapi_url`.
 8. Audit fields are trigger-managed — never write `created_by/updated_by/created_at/updated_at` from app code, and give new tables the same four columns plus the trigger.
 9. Provider API keys are encrypted at rest (`APP_ENCRYPTION_KEY`); never return one, log one, or store one in plaintext. Without the env var, key storage returns 503.

@@ -47,21 +47,6 @@ def _to_session(response) -> AuthSession:
     )
 
 
-def sign_up(email: str, password: str, client: Client) -> str:
-    """Register a user and return their user id.
-
-    Raises InvalidCredentialsError if the account already exists or the password
-    is rejected.
-    """
-    try:
-        response = client.auth.sign_up({"email": email, "password": password})
-    except Exception as exc:  # AuthApiError etc. from Supabase
-        raise InvalidCredentialsError(str(exc)) from exc
-    if not response.user:
-        raise InvalidCredentialsError("Sign-up failed")
-    return response.user.id
-
-
 def sign_in(email: str, password: str, client: Client) -> AuthSession:
     """Validate credentials and return the caller's token pair.
 

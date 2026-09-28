@@ -121,7 +121,7 @@ Rules of the layout:
 
 ## Authentication
 
-- Email/password auth via Supabase Auth (GoTrue). Routes (all under the `/api/v1` prefix): `POST /auth/signup`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `GET /auth/me`.
+- Email/password auth via Supabase Auth (GoTrue). Routes (all under the `/api/v1` prefix): `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `GET /auth/me`. There is **no sign-up route**: accounts are provisioned in Supabase (dashboard or admin), then sign in here.
 - **Two cookies, two tokens** (`app/modules/auth/session.py`), both HttpOnly + SameSite=Lax + Secure, so no script can read or forge them:
   - `pas_access_token` — the Supabase-signed **JWT access token** (1h), sent with every request and the only thing that authenticates a call.
   - `pas_refresh_token` — the long-lived **refresh token** (30-day cookie), used only to mint a new JWT.
@@ -194,16 +194,16 @@ Every table carries `created_at`, `updated_at`, `created_by`, `updated_by` (the 
 
 ## Login activity
 
-- Every successful `POST /auth/login` and `/auth/signup` records a row in `public.login_events`: IP (+ `x-forwarded-for`/`cf-connecting-ip`/`x-real-ip`), IP version, raw User-Agent, parsed browser/version/OS/device/bot flag, city/region/country/continent/postal/coordinates/timezone/ISP, language, referer, origin, method, path.
+- Every successful `POST /auth/login` records a row in `public.login_events`: IP (+ `x-forwarded-for`/`cf-connecting-ip`/`x-real-ip`), IP version, raw User-Agent, parsed browser/version/OS/device/bot flag, city/region/country/continent/postal/coordinates/timezone/ISP, language, referer, origin, method, path.
 - `GET /auth/activity` returns the caller's last 25 sign-ins (token-bound client + RLS).
 - Recording is best-effort: failures are logged, never surfaced, so tracking can't block sign-in.
 - The sidebar shows a compact "This session" card; the Activity view lists the history and a modal shows every captured field.
 
 ## Security
 
-- **Every data endpoint requires a session.** Under the `/api/v1` prefix, `/customers*`, `/providers*`, `/models/*`, `/api-keys*`, `/billing/*`, `/sessions*`, `/analytics/summary`, `/auth/me` and `/auth/activity` return 401 without the auth cookie. The only anonymous routes are `/` (login UI), `/info`, `/health` and the auth set `/auth/login`, `/auth/signup`, `/auth/logout`. `POST /auth/refresh` needs no access token either — it authenticates with the refresh cookie and returns 401 without one, so the sweep covers it like any other route. `tests/test_security.py` enumerates the OpenAPI schema and asserts 401 from every other operation, so new routes are covered without editing a list.
+- **Every data endpoint requires a session.** Under the `/api/v1` prefix, `/customers*`, `/providers*`, `/models/*`, `/api-keys*`, `/billing/*`, `/sessions*`, `/analytics/summary`, `/audit-logs`, `/auth/me` and `/auth/activity` return 401 without the auth cookie. The only anonymous routes are `/` (login UI), `/info`, `/health` and the auth set `/auth/login`, `/auth/logout`. `POST /auth/refresh` needs no access token either — it authenticates with the refresh cookie and returns 401 without one, so the sweep covers it like any other route. `tests/test_security.py` enumerates the OpenAPI schema and asserts 401 from every other operation, so new routes are covered without editing a list.
 - **Docs are locked down.** Swagger, ReDoc and `/openapi.json` are registered manually in `app/main.py` and return **404 unless `DOCS_USERNAME` + `DOCS_PASSWORD` are set**; when set they require HTTP Basic auth (`require_docs_auth` in `app/core/dependencies.py`); the routes themselves live in `app/modules/system/router.py`.
-- **Rate limiting** is a dependency-free in-memory sliding window (`app/core/security/rate_limit.py`) applied as middleware: `RATE_LIMIT_PER_MINUTE` (default 120) for everything, `AUTH_RATE_LIMIT_PER_MINUTE` (default 8) for the sign-in/sign-up endpoints. Those are matched on the path *suffix* (`_SENSITIVE_SUFFIXES` in `app/main.py`) so the tight budget survives an API version prefix — never match them as exact paths. Blocked requests get `429` with `Retry-After`. Per-process only — move to Redis before running more than one instance.
+- **Rate limiting** is a dependency-free in-memory sliding window (`app/core/security/rate_limit.py`) applied as middleware: `RATE_LIMIT_PER_MINUTE` (default 120) for everything, `AUTH_RATE_LIMIT_PER_MINUTE` (default 8) for the sign-in and customer-portal endpoints. Those are matched on the path *suffix* (`_SENSITIVE_SUFFIXES` in `app/main.py`) so the tight budget survives an API version prefix — never match them as exact paths. Blocked requests get `429` with `Retry-After`. Per-process only — move to Redis before running more than one instance.
 - **CORS** is configured from `CORS_ORIGINS` (comma-separated; `*` by default). Credentials are only enabled when explicit origins are configured, because browsers reject `*` + credentials. Methods and headers are allow-listed.
 - **Hardening headers** on every response: `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, plus HSTS over HTTPS.
 - Session cookies are `HttpOnly`, `SameSite=Lax`, `Secure`; passwords are hashed by Supabase (bcrypt) and never logged.

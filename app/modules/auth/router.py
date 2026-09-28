@@ -1,4 +1,4 @@
-"""Authentication routes: sign-up, sign-in, refresh, sign-out, current user, activity.
+"""Authentication routes: sign-in, refresh, sign-out, current user, activity.
 
 The endpoints here are the only ones an anonymous caller may reach (plus the
 landing page, ``/info`` and ``/health``). Everything about tokens — issuing,
@@ -7,7 +7,7 @@ rotating, clearing — lives in ``session.py``.
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from app.core.clients.supabase import (
     SupabaseNotConfiguredError,
@@ -21,7 +21,6 @@ from app.modules.auth.schemas import AuthRequest, UserOut
 from app.modules.auth.service import (
     InvalidCredentialsError,
     sign_in,
-    sign_up,
 )
 from app.modules.auth.session import (
     ACCESS_TOKEN_COOKIE,
@@ -41,34 +40,6 @@ def _user_payload(session) -> UserOut:
     return UserOut(
         id=session.user_id,
         email=session.email,
-        access_token_expires_at=session.expires_at,
-    )
-
-
-@router.post("/signup", response_model=UserOut, status_code=201)
-def signup(payload: AuthRequest, request: Request, response: Response) -> UserOut:
-    """Create an account and start a session (sets the access + refresh cookies)."""
-    try:
-        user_id = sign_up(payload.email, payload.password, get_supabase_client())
-    except InvalidCredentialsError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-    # Sign in right away so the user leaves with a valid session.
-    try:
-        session = sign_in(payload.email, payload.password, get_supabase_client())
-    except InvalidCredentialsError as exc:
-        # Email confirmation may be required in project settings; the account
-        # exists but cannot start a session yet.
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account created. Confirm your email before signing in.",
-        ) from exc
-
-    record_login(request, user_id, get_client_for_token(session.access_token))
-    set_session_cookies(response, session)
-    return UserOut(
-        id=user_id,
-        email=payload.email,
         access_token_expires_at=session.expires_at,
     )
 
