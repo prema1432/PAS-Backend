@@ -107,3 +107,22 @@ class OTPVerifyRequest(BaseModel):
 class OTPVerifyResponse(BaseModel):
     message: str
     jwt_token: str
+
+
+class CustomerProfileResponse(BaseModel):
+    """Response for GET /customer/me — everything except OTP fields."""
+    phone_number: str
+    source: SourceType
+    payment_type: PaymentType
+    activation_date: Optional[datetime] = None
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None
+    referral_code_used: Optional[str] = None
+    referral_code_generated: Optional[str] = None
+    time_remaining_seconds: int
+    time_expiry: Optional[datetime] = None
+    last_login: Optional[datetime] = None
+    login_session_id: Optional[str] = None
+    device_id: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime

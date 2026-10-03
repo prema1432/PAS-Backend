@@ -12,9 +12,9 @@ import string
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from app.auth import create_jwt
+from app.auth import create_jwt, get_current_customer
 from app.config import settings
 from app.database import get_db
 from app.login_event import record_login_event
@@ -22,6 +22,7 @@ from app.models import (
     CustomerDocument,
     CustomerLoginRequest,
     CustomerLoginResponse,
+    CustomerProfileResponse,
     PaymentType,
     SourceType,
 )
@@ -217,6 +218,50 @@ async def customer_login(request: Request, body: CustomerLoginRequest) -> Custom
         message="OTP sent. Call this endpoint again with the otp field to receive your JWT.",
         otp=otp,
         jwt_token=None,
+    )
+
+
+@router.get(
+    "/me",
+    response_model=CustomerProfileResponse,
+    summary="Get current customer profile",
+    status_code=status.HTTP_200_OK,
+)
+async def get_me(
+    token: dict = Depends(get_current_customer),
+) -> CustomerProfileResponse:
+    """
+    Returns the full profile of the authenticated customer.
+
+    Requires a valid **Bearer token** in the `Authorization` header.
+    """
+    phone_number: str = token["sub"]
+
+    db = get_db()
+    doc = await db[COLLECTION].find_one({"phone_number": phone_number})
+
+    if doc is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Customer not found.",
+        )
+
+    return CustomerProfileResponse(
+        phone_number=doc["phone_number"],
+        source=doc.get("source", "self"),
+        payment_type=doc.get("payment_type", "free"),
+        activation_date=doc.get("activation_date"),
+        created_by=doc.get("created_by"),
+        updated_by=doc.get("updated_by"),
+        referral_code_used=doc.get("referral_code_used"),
+        referral_code_generated=doc.get("referral_code_generated"),
+        time_remaining_seconds=doc.get("time_remaining_seconds", 0),
+        time_expiry=doc.get("time_expiry"),
+        last_login=doc.get("last_login"),
+        login_session_id=doc.get("login_session_id"),
+        device_id=doc.get("device_id"),
+        created_at=doc.get("created_at"),
+        updated_at=doc.get("updated_at"),
     )
 
 
