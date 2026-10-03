@@ -66,7 +66,19 @@ async def delete_customer(phone: str = Path(...)) -> dict:
     return {"message": f"Customer {phone} and their login events deleted."}
 
 
-@router.patch("/customers/{phone}", summary="Update customer fields")
+@router.post("/customers/{phone}/refresh-otp", summary="Regenerate OTP for a customer")
+async def refresh_otp(phone: str = Path(...)) -> dict:
+    import random, string
+    from datetime import datetime, timezone, timedelta
+    otp = "".join(random.choices(string.digits, k=6))
+    db = get_db()
+    result = await db["customers"].update_one(
+        {"phone_number": phone},
+        {"$set": {"otp": otp, "otp_expires_at": None, "updated_at": datetime.now(tz=timezone.utc)}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Customer not found.")
+    return {"phone_number": phone, "otp": otp}
 async def update_customer(phone: str = Path(...), body: dict[str, Any] = None) -> dict:
     if not body:
         raise HTTPException(status_code=400, detail="No fields provided.")
@@ -449,6 +461,7 @@ function renderCustomers(rows) {
     <td>${c.last_login?c.last_login.replace('T',' ').split('.')[0]:'—'}</td>
     <td><div class="actions">
       <button class="btn btn-ghost btn-sm" onclick='showDetail(${JSON.stringify(c)})'>View</button>
+      <button class="btn btn-ghost btn-sm" style="color:#fbbf24;border-color:#78350f" title="Refresh OTP" onclick="refreshOtp('${c.phone_number}',this)">↻ OTP</button>
       <button class="btn btn-danger btn-sm" onclick="askDel('customer','${c.phone_number}')">Del</button>
     </div></td>
   </tr>`).join('');
@@ -520,6 +533,20 @@ function askDel(type,id){
 }
 function confirmDelete(){if(delCb)delCb();}
 function closeConfirm(){document.getElementById('confirm-overlay').classList.remove('open');delCb=null;}
+
+async function refreshOtp(phone, btn) {
+  const orig = btn.textContent;
+  btn.textContent = '…';
+  btn.disabled = true;
+  const r = await fetch(`/admin/customers/${encodeURIComponent(phone)}/refresh-otp`, {method:'POST'});
+  const d = await r.json();
+  btn.disabled = false;
+  btn.textContent = orig;
+  if (d.otp) {
+    showDetail({phone_number: phone, new_otp: d.otp, message: 'OTP refreshed successfully'});
+    loadCustomers();
+  }
+}
 
 loadOverview();
 </script>
