@@ -66,23 +66,14 @@ def _subscription_active(doc: dict) -> bool:
 
 
 def _check_otp(doc: dict, submitted: str) -> None:
-    """Raise HTTPException if OTP is wrong or expired."""
+    """Raise HTTPException if OTP is wrong."""
     stored = doc.get("otp")
-    otp_exp = doc.get("otp_expires_at")
 
     if not stored or stored != submitted:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid OTP.",
         )
-    if otp_exp is not None:
-        if otp_exp.tzinfo is None:
-            otp_exp = otp_exp.replace(tzinfo=timezone.utc)
-        if datetime.now(tz=timezone.utc) > otp_exp:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="OTP has expired. Request a new one.",
-            )
 
 
 # ---------------------------------------------------------------------------
@@ -131,8 +122,8 @@ async def customer_login(request: Request, body: CustomerLoginRequest) -> Custom
             created_by=body.phone_number,
             updated_by=body.phone_number,
             referral_code_generated=_generate_referral_code(body.phone_number),
-            time_remaining_seconds=0,
-            time_expiry=None,
+            time_remaining_seconds=1800,                          # 30 minutes free
+            time_expiry=now + timedelta(days=10),                 # expires in 10 days
             last_login=now,
             login_session_id=session_id,
             device_id=body.device_id,
