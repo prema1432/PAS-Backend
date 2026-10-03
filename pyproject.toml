@@ -1,68 +1,23 @@
 [project]
 name = "pas-backend"
-# The release version has exactly one source: app/__init__.py.__version__, read
-# at build time. Bump it there (and run `make lock`) — never here.
-dynamic = ["version"]
-description = "PAS Backend API with Supabase integration"
-requires-python = ">=3.12"
+version = "0.1.0"
+description = "PAS Backend API"
+requires-python = ">=3.11"
 dependencies = [
-    "fastapi[standard]",
-    "supabase>=2.9.1",
-    "pydantic-settings>=2.6.1",
-    "email-validator>=2.2.0",
-    "cryptography>=50.0.1",
+    "fastapi==0.115.5",
+    "uvicorn[standard]==0.32.1",
+    "motor==3.7.0",
+    "pymongo==4.11.1",
+    "python-jose[cryptography]==3.3.0",
+    "passlib==1.7.4",
+    "python-dotenv==1.0.1",
+    "pydantic==2.10.3",
+    "pydantic-settings==2.6.1",
 ]
 
-[dependency-groups]
-dev = [
-    "pre-commit>=4.0.1",
-    "pytest>=8.3.4",
-    "pytest-cov>=7.0.0",
-    "ruff>=0.9.0",
-]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-# Discover the package tree instead of listing it, so a new app/modules/<name>/
-# feature folder is packaged (and deployed) without touching pyproject.toml.
-[tool.setuptools.packages.find]
-include = ["app*"]
-
-[tool.setuptools.dynamic]
-version = {attr = "app.__version__"}
-
-[tool.setuptools.package-data]
-"app.static" = ["*.html"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "-q"
-
-[tool.coverage.run]
-# Coverage is measured over the application only; the tests are not the subject.
-source = ["app"]
-
-[tool.coverage.report]
-# 100% is enforced: `make verify` fails the gate on a single uncovered line.
-# See the "Tests and coverage" section of CLAUDE.md.
-fail_under = 100
-show_missing = true
-skip_covered = false
-exclude_lines = [
-    "pragma: no cover",
-    "if TYPE_CHECKING:",
-    "if __name__ == .__main__.:",
-    "@(abc\\.)?abstractmethod",
-]
-
-[tool.ruff]
-line-length = 100
-target-version = "py312"
-exclude = [".venv"]
-
-[tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP", "B", "SIM"]
-ignore = ["B008"]  # B008: function call in argument defaults - required for FastAPI Depends()
-
-[tool.fastapi]
-# The ASGI entrypoint lives with the application, not in a root shim. FastAPI
-# Cloud, `fastapi run` and uvicorn all accept the same `module:attr` form.
-entrypoint = "app.main:app"
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
