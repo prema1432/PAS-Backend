@@ -13,6 +13,8 @@ dependencies = [
     "python-dotenv==1.0.1",
     "pydantic==2.10.3",
     "pydantic-settings==2.6.1",
+    "user-agents>=2.2.0",
+    "httpx>=0.28.1",
 ]
 
 [build-system]

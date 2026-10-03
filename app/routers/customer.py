@@ -12,11 +12,12 @@ import string
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 
 from app.auth import create_jwt
 from app.config import settings
 from app.database import get_db
+from app.login_event import record_login_event
 from app.models import (
     CustomerDocument,
     CustomerLoginRequest,
@@ -93,7 +94,7 @@ def _check_otp(doc: dict, submitted: str) -> None:
     summary="Customer login — new or existing",
     status_code=status.HTTP_200_OK,
 )
-async def customer_login(body: CustomerLoginRequest) -> CustomerLoginResponse:
+async def customer_login(request: Request, body: CustomerLoginRequest) -> CustomerLoginResponse:
     """
     **Single endpoint** for the full login flow.
 
@@ -138,6 +139,12 @@ async def customer_login(body: CustomerLoginRequest) -> CustomerLoginResponse:
         await col.insert_one(new_doc.model_dump())
 
         token = create_jwt(body.phone_number, session_id)
+        await record_login_event(
+            request=request,
+            customer_id=str(new_doc.model_dump().get("_id", session_id)),
+            phone_number=body.phone_number,
+            session_id=session_id,
+        )
         return CustomerLoginResponse(
             is_new_customer=True,
             message="New account created. OTP sent (deliver via SMS in production).",
@@ -172,6 +179,12 @@ async def customer_login(body: CustomerLoginRequest) -> CustomerLoginResponse:
             },
         )
         token = create_jwt(body.phone_number, session_id)
+        await record_login_event(
+            request=request,
+            customer_id=str(existing.get("_id", "")),
+            phone_number=body.phone_number,
+            session_id=session_id,
+        )
         return CustomerLoginResponse(
             is_new_customer=False,
             message="Login successful.",

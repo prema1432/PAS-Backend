@@ -22,6 +22,12 @@ async def main() -> None:
     # TTL index to auto-expire OTPs from MongoDB (optional housekeeping)
     await col.create_index("otp_expires_at", expireAfterSeconds=0)
 
+    # Login events indexes
+    events = db["login_events"]
+    await events.create_index("customer_id")
+    await events.create_index("phone_number")
+    await events.create_index("timestamp")
+
     print("Indexes created successfully.")
     client.close()
 
