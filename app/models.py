@@ -140,18 +140,29 @@ class CustomerLoginRequest(BaseModel):
 class CustomerLoginResponse(BaseModel):
     """
     Returned for both new and existing customers.
-
-    - new customer  : otp is returned (send via SMS in production), jwt_token is None
-                      until OTP is validated via a separate verify step *OR* you send
-                      the token pre-auth (depends on product decision — here we send
-                      it so the client can proceed immediately on new registration).
-    - existing customer within validity: otp is returned for front-end to verify.
-    - expired subscription: raises HTTP 403.
     """
     is_new_customer: bool
     message: str
-    otp: str                        # 6-digit OTP (in production deliver via SMS, not API)
-    jwt_token: Optional[str] = None # issued only when subscription is active or new
+    otp: str                           # 6-digit OTP
+    jwt_token: Optional[str] = None    # Alias for access_token (backward compatibility)
+    access_token: Optional[str] = None # 15-minute access token
+    refresh_token: Optional[str] = None# 30-day refresh token
+    token_type: str = "bearer"
+    expires_in: int = 900              # 15 mins (900 seconds)
+
+
+class CustomerRefreshTokenRequest(BaseModel):
+    """Payload to refresh expired access token using a valid refresh token."""
+    refresh_token: str = Field(..., description="Customer 30-day refresh token")
+
+
+class CustomerRefreshTokenResponse(BaseModel):
+    """Refreshed 15-minute access token and rotated refresh token."""
+    access_token: str
+    refresh_token: Optional[str] = None
+    token_type: str = "bearer"
+    expires_in: int = 900
+    message: str = "Access token refreshed successfully (15 mins)."
 
 
 class OTPVerifyRequest(BaseModel):

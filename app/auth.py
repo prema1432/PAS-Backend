@@ -31,17 +31,43 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         return False
 
 
-def create_jwt(phone_number: str, session_id: str) -> str:
-    """Create a signed JWT for the given customer."""
+def create_customer_tokens(phone_number: str, session_id: str) -> dict:
+    """
+    Create both an Access Token (15 mins) and a Refresh Token (30 days) for a customer.
+    """
     now = datetime.now(tz=timezone.utc)
-    payload = {
+    access_exp = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    refresh_exp = now + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+
+    access_payload = {
         "sub": phone_number,
         "sid": session_id,
-        "type": "customer",
+        "type": "access",
         "iat": now,
-        "exp": now + timedelta(minutes=settings.JWT_EXPIRE_MINUTES),
+        "exp": access_exp,
     }
-    return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+    refresh_payload = {
+        "sub": phone_number,
+        "sid": session_id,
+        "type": "refresh",
+        "iat": now,
+        "exp": refresh_exp,
+    }
+    access_token = jwt.encode(access_payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+    refresh_token = jwt.encode(refresh_payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "expires_in": int(settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60),
+    }
+
+
+def create_jwt(phone_number: str, session_id: str) -> str:
+    """Create a signed 15-minute Access JWT for the given customer."""
+    tokens = create_customer_tokens(phone_number, session_id)
+    return tokens["access_token"]
 
 
 def create_admin_jwt(email: str, role: str = "admin", name: str = "") -> str:
@@ -80,7 +106,8 @@ async def get_current_customer(
     try:
         payload = decode_jwt(credentials.credentials)
         phone = payload.get("sub")
-        if not phone:
+        token_type = payload.get("type")
+        if not phone or token_type not in ("access", "customer"):
             raise exc
 
         from app.database import get_db

@@ -9,7 +9,9 @@ class Settings(BaseSettings):
 
     JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRE_MINUTES: int = 60
+    JWT_EXPIRE_MINUTES: int = 15          # 15 minutes default lifetime
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15 # 15 minutes lifetime for access token
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30   # 30 days lifetime for refresh token
 
     # OTP validity window in seconds (default 5 minutes)
     OTP_EXPIRE_SECONDS: int = 300

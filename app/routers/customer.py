@@ -14,7 +14,7 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from app.auth import create_jwt, get_current_customer
+from app.auth import create_customer_tokens, create_jwt, decode_jwt, get_current_customer
 from app.config import settings
 from app.database import get_db
 from app.login_event import record_login_event
@@ -25,6 +25,8 @@ from app.models import (
     CustomerLoginRequest,
     CustomerLoginResponse,
     CustomerProfileResponse,
+    CustomerRefreshTokenRequest,
+    CustomerRefreshTokenResponse,
     PaymentType,
     SourceType,
 )
@@ -150,7 +152,7 @@ async def customer_login(request: Request, body: CustomerLoginRequest) -> Custom
             "created_at": now,
         })
 
-        token = create_jwt(body.phone_number, session_id)
+        tokens = create_customer_tokens(body.phone_number, session_id)
         await record_login_event(
             request=request,
             customer_id=str(new_doc.model_dump().get("_id", session_id)),
@@ -161,7 +163,11 @@ async def customer_login(request: Request, body: CustomerLoginRequest) -> Custom
             is_new_customer=True,
             message="New account created. 5 minutes deducted from subscription balance.",
             otp=otp,
-            jwt_token=token,
+            jwt_token=tokens["access_token"],
+            access_token=tokens["access_token"],
+            refresh_token=tokens["refresh_token"],
+            token_type=tokens["token_type"],
+            expires_in=tokens["expires_in"],
         )
 
     # ------------------------------------------------------------------
@@ -242,7 +248,7 @@ async def customer_login(request: Request, body: CustomerLoginRequest) -> Custom
             "created_at": now,
         })
 
-        token = create_jwt(body.phone_number, session_id)
+        tokens = create_customer_tokens(body.phone_number, session_id)
         await record_login_event(
             request=request,
             customer_id=str(existing.get("_id", "")),
@@ -253,7 +259,11 @@ async def customer_login(request: Request, body: CustomerLoginRequest) -> Custom
             is_new_customer=False,
             message="Login successful. 5 minutes deducted from subscription balance.",
             otp=body.otp,
-            jwt_token=token,
+            jwt_token=tokens["access_token"],
+            access_token=tokens["access_token"],
+            refresh_token=tokens["refresh_token"],
+            token_type=tokens["token_type"],
+            expires_in=tokens["expires_in"],
         )
 
     # Step 1: No OTP submitted — only generate if DB has no OTP stored
@@ -406,6 +416,71 @@ async def customer_heartbeat(
         is_active=new_seconds > 0,
         message=f"Deducted {deduct}s. Balance: {new_seconds}s.",
     )
+
+
+@router.post(
+    "/refresh",
+    response_model=CustomerRefreshTokenResponse,
+    summary="Refresh customer access token (15 mins)",
+    status_code=status.HTTP_200_OK,
+)
+async def refresh_customer_token(body: CustomerRefreshTokenRequest) -> CustomerRefreshTokenResponse:
+    """
+    Exchange a valid 30-day refresh token for a fresh 15-minute access token.
+    """
+    exc = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or expired refresh token.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = decode_jwt(body.refresh_token)
+    except Exception:
+        raise exc
+
+    if payload.get("type") != "refresh":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Provided token is not a valid refresh token.",
+        )
+
+    phone_number = payload.get("sub")
+    token_sid = payload.get("sid")
+    if not phone_number:
+        raise exc
+
+    db = get_db()
+    clean_phone = phone_number.replace("+91", "").strip()
+    phone_filter = {"$in": [phone_number, clean_phone, f"+91{clean_phone}"]}
+    customer = await db[COLLECTION].find_one({"phone_number": phone_filter})
+
+    if not customer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found.")
+
+    # Ensure session matches single active device
+    active_sid = customer.get("login_session_id")
+    if not active_sid or active_sid != token_sid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session expired or customer logged in from another device.",
+        )
+
+    # Check if subscription active
+    if not _subscription_active(customer) or customer.get("time_remaining_seconds", 0) <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Subscription expired or zero balance remaining.",
+        )
+
+    tokens = create_customer_tokens(customer["phone_number"], token_sid)
+    return CustomerRefreshTokenResponse(
+        access_token=tokens["access_token"],
+        refresh_token=tokens["refresh_token"],
+        token_type=tokens["token_type"],
+        expires_in=tokens["expires_in"],
+        message="Access token refreshed successfully (15 mins).",
+    )
+
 
 
 
