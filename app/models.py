@@ -77,6 +77,7 @@ class RechargeSource(str, Enum):
 
 class CustomerDocument(BaseModel):
     """Full customer record as stored in MongoDB."""
+    model_config = {"use_enum_values": True}
 
     phone_number: str                           # unique, indexed (format: +91XXXXXXXXXX)
     otp: Optional[str] = None                  # current 6-digit OTP (hashed or plain)
@@ -195,6 +196,7 @@ class CustomerProfileResponse(BaseModel):
 
 class RechargeDocument(BaseModel):
     """Recharge/Payment transaction document linked to a Customer."""
+    model_config = {"use_enum_values": True}
     customer_id: Optional[str] = None
     phone_number: str
     amount: float = 0.0
