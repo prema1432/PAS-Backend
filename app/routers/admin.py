@@ -1048,6 +1048,50 @@ async def update_admin(email: str, payload: AdminUpdateRequest) -> dict:
 # Dashboard HTML route
 # ---------------------------------------------------------------------------
 
+@router.get("/health-status", tags=["admin"], include_in_schema=False)
+async def admin_health_status() -> dict:
+    """Detailed health check for admin dashboard sidebar."""
+    import time
+    from app.database import get_db
+    
+    start_time = time.time()
+    db = get_db()
+    db_status = "connected"
+    db_ping_ms = 0.0
+    collections = {}
+    try:
+        t0 = time.time()
+        await db.command("ping")
+        db_ping_ms = round((time.time() - t0) * 1000, 1)
+        collections = {
+            "customers": await db["customers"].count_documents({}),
+            "login_events": await db["login_events"].count_documents({}),
+            "recharges": await db["recharges"].count_documents({}),
+            "admins": await db["admins"].count_documents({}),
+        }
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
+    total_ping_ms = round((time.time() - start_time) * 1000, 1)
+    
+    return {
+        "status": "online",
+        "api": {
+            "version": "0.1.0",
+            "framework": "FastAPI",
+            "python": sys.version.split()[0],
+            "latency_ms": total_ping_ms,
+        },
+        "database": {
+            "engine": "MongoDB (Motor)",
+            "name": getattr(db, "name", "pas_db"),
+            "status": db_status,
+            "ping_ms": db_ping_ms,
+            "collections": collections,
+        }
+    }
+
+
 @router.get("", response_class=HTMLResponse, include_in_schema=False)
 @router.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def dashboard() -> HTMLResponse:
@@ -1233,11 +1277,46 @@ tailwind.config = {
     </a>
   </nav>
 
-  <!-- Sidebar Footer -->
-  <div class="p-3 border-t border-slate-200 flex flex-col gap-1">
-    <div class="flex items-center gap-2 px-3 py-2 text-[11px] text-slate-500">
-      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-      <span>API Status: <strong>Online</strong></span>
+  <!-- Sidebar Detailed API & DB Health Section -->
+  <div class="p-3.5 border-t border-slate-200 bg-slate-50/80 flex flex-col gap-2">
+    <div class="flex items-center justify-between px-0.5">
+      <div class="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+        <i data-lucide="activity" class="w-3.5 h-3.5 text-indigo-600"></i>
+        <span>System & DB Health</span>
+      </div>
+      <button onclick="loadSystemHealth(true)" title="Refresh Health Diagnostics" class="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition">
+        <i data-lucide="refresh-cw" class="w-3 h-3" id="health-refresh-icon"></i>
+      </button>
+    </div>
+
+    <!-- API Status Card -->
+    <div class="bg-white rounded-lg p-2.5 border border-slate-200 shadow-xs flex flex-col gap-1.5">
+      <div class="flex items-center justify-between text-xs">
+        <span class="flex items-center gap-1.5 font-semibold text-slate-700">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="health-api-dot"></span>
+          API Service
+        </span>
+        <span class="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] border border-emerald-200" id="health-api-badge">Online</span>
+      </div>
+      <div class="flex items-center justify-between text-[10px] text-slate-500">
+        <span>Latency: <strong class="text-slate-800 font-mono" id="health-api-latency">-- ms</strong></span>
+        <span class="text-slate-500 font-mono" id="health-api-ver">FastAPI</span>
+      </div>
+    </div>
+
+    <!-- MongoDB Database Status Card -->
+    <div class="bg-white rounded-lg p-2.5 border border-slate-200 shadow-xs flex flex-col gap-1.5">
+      <div class="flex items-center justify-between text-xs">
+        <span class="flex items-center gap-1.5 font-semibold text-slate-700">
+          <span class="w-2 h-2 rounded-full bg-emerald-500" id="health-db-dot"></span>
+          MongoDB
+        </span>
+        <span class="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] border border-emerald-200" id="health-db-badge">Connected</span>
+      </div>
+      <div class="flex items-center justify-between text-[10px] text-slate-500">
+        <span>Ping: <strong class="text-slate-800 font-mono" id="health-db-ping">-- ms</strong></span>
+        <span>DB: <strong class="text-indigo-600 font-mono" id="health-db-name">pas_db</strong></span>
+      </div>
     </div>
   </div>
 </aside>
@@ -1277,7 +1356,7 @@ tailwind.config = {
       <!-- Admin Badge -->
       <div id="topbar-admin-badge" class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs text-slate-700">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span id="topbar-admin-name" class="font-semibold text-white">Admin</span>
+        <span id="topbar-admin-name" class="font-semibold text-slate-900">Admin</span>
         <span id="topbar-admin-role" class="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700 border border-indigo-200 font-mono">superadmin</span>
       </div>
 
@@ -1733,7 +1812,7 @@ tailwind.config = {
               <i data-lucide="shopping-bag" class="w-5 h-5"></i>
             </div>
             <div>
-              <h3 class="text-base font-bold text-white">Dynamic Store & System Configuration</h3>
+              <h3 class="text-base font-bold text-slate-900">Dynamic Store & System Configuration</h3>
               <p class="text-xs text-slate-500">Synchronized dynamically via backend API (<code>GET /admin/store</code>, <code>PUT /admin/store</code>)</p>
             </div>
           </div>
@@ -1754,13 +1833,13 @@ tailwind.config = {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Backend URL</label>
-              <input type="text" id="store-backend-url" required class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+              <input type="text" id="store-backend-url" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition"/>
               <p class="text-[10px] text-slate-700 mt-1">Host endpoint for Electron assistant synchronization</p>
             </div>
 
             <div>
               <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Default Plan For New Registrations</label>
-              <select id="store-default-plan" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+              <select id="store-default-plan" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition">
                 <option value="free">free (Standard Trial)</option>
                 <option value="paid">paid (Instant Unlimited)</option>
               </select>
@@ -1770,7 +1849,7 @@ tailwind.config = {
             <div>
               <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Default Trial Balance (Seconds)</label>
               <div class="flex gap-2">
-                <input type="number" id="store-trial-time" min="0" required class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+                <input type="number" id="store-trial-time" min="0" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition"/>
                 <span id="store-trial-minutes-display" class="px-3 py-2 rounded-lg bg-dark-950 border border-slate-200 text-xs text-indigo-400 font-mono whitespace-nowrap">30m</span>
               </div>
               <p class="text-[10px] text-slate-700 mt-1">Initial voice & transcription allocation for free users</p>
@@ -1778,7 +1857,7 @@ tailwind.config = {
 
             <div>
               <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Rows Per Page (Universal Pagination)</label>
-              <select id="store-per-page" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+              <select id="store-per-page" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition">
                 <option value="10">10 rows per page</option>
                 <option value="20" selected>20 rows per page</option>
                 <option value="50">50 rows per page</option>
@@ -1789,25 +1868,25 @@ tailwind.config = {
 
             <div>
               <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Support Phone / Help Desk</label>
-              <input type="text" id="store-support-phone" placeholder="+919876543210" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+              <input type="text" id="store-support-phone" placeholder="+919876543210" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition"/>
               <p class="text-[10px] text-slate-700 mt-1">Contact number displayed for customer assistance</p>
             </div>
 
             <div>
               <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">System Currency</label>
-              <input type="text" id="store-currency" value="INR" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white font-mono uppercase focus:outline-none focus:border-indigo-500 transition"/>
+              <input type="text" id="store-currency" value="INR" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 font-mono uppercase focus:outline-none focus:border-indigo-500 focus:bg-white transition"/>
               <p class="text-[10px] text-slate-700 mt-1">Currency symbol/code for recharge transactions</p>
             </div>
 
             <div>
               <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Session Expiry Timeout (Minutes)</label>
-              <input type="number" id="store-session-timeout" min="15" value="1440" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+              <input type="number" id="store-session-timeout" min="15" value="1440" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition"/>
               <p class="text-[10px] text-slate-700 mt-1">Inactivity window before automatic session revocation</p>
             </div>
 
             <div>
               <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Auto-Generate OTP Policy</label>
-              <select id="store-auto-otp" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+              <select id="store-auto-otp" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition">
                 <option value="true" selected>Enabled (Auto 6-digit numeric OTP)</option>
                 <option value="false">Manual Only</option>
               </select>
@@ -1862,11 +1941,11 @@ tailwind.config = {
           <i data-lucide="history" class="w-4 h-4"></i>
         </div>
         <div>
-          <h3 class="text-sm font-bold text-white">Minutes Consumption & Usage History</h3>
+          <h3 class="text-sm font-bold text-slate-900">Minutes Consumption & Usage History</h3>
           <p class="text-[11px] text-slate-500">Customer: <span id="usage-modal-phone" class="font-mono text-cyan-300 font-bold">—</span></p>
         </div>
       </div>
-      <button onclick="closeModal('customer-usage-modal')" class="text-slate-500 hover:text-white transition p-1">
+      <button onclick="closeModal('customer-usage-modal')" class="text-slate-500 hover:text-slate-900 transition p-1">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -1928,11 +2007,11 @@ tailwind.config = {
           <i data-lucide="download" class="w-4 h-4"></i>
         </div>
         <div>
-          <h3 class="text-sm font-bold text-white">Export Dataset</h3>
+          <h3 class="text-sm font-bold text-slate-900">Export Dataset</h3>
           <p class="text-[11px] text-slate-500">Select export file format</p>
         </div>
       </div>
-      <button onclick="closeModal('export-modal')" class="text-slate-500 hover:text-white transition">
+      <button onclick="closeModal('export-modal')" class="text-slate-500 hover:text-slate-900 transition">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -1940,7 +2019,7 @@ tailwind.config = {
     <div class="mt-5 space-y-4">
       <div>
         <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Target Dataset</label>
-        <input type="text" id="export-resource-display" readonly class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white font-mono uppercase"/>
+        <input type="text" id="export-resource-display" readonly class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 font-mono uppercase"/>
       </div>
 
       <div>
@@ -1949,7 +2028,7 @@ tailwind.config = {
           <label class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white cursor-pointer transition">
             <input type="radio" name="export-format" value="xlsx" checked class="text-indigo-600 focus:ring-indigo-500"/>
             <div>
-              <div class="text-xs font-bold text-white flex items-center gap-1.5">
+              <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                 <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
                 <span>Excel (.xlsx)</span>
               </div>
@@ -1960,7 +2039,7 @@ tailwind.config = {
           <label class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white cursor-pointer transition">
             <input type="radio" name="export-format" value="json" class="text-indigo-600 focus:ring-indigo-500"/>
             <div>
-              <div class="text-xs font-bold text-white flex items-center gap-1.5">
+              <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                 <i data-lucide="file-code" class="w-3.5 h-3.5 text-amber-400"></i>
                 <span>JSON (.json)</span>
               </div>
@@ -1993,9 +2072,9 @@ tailwind.config = {
         <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
           <i data-lucide="user-plus" class="w-4 h-4"></i>
         </div>
-        <h3 class="text-sm font-bold text-white">Add New Customer</h3>
+        <h3 class="text-sm font-bold text-slate-900">Add New Customer</h3>
       </div>
-      <button onclick="closeModal('add-customer-modal')" class="text-slate-500 hover:text-white transition">
+      <button onclick="closeModal('add-customer-modal')" class="text-slate-500 hover:text-slate-900 transition">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -2003,7 +2082,7 @@ tailwind.config = {
     <form onsubmit="event.preventDefault(); submitAddCustomer();" class="mt-4 space-y-4">
       <div>
         <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Phone Number *</label>
-        <input type="text" id="add-phone" required placeholder="+919876543210" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+        <input type="text" id="add-phone" required placeholder="+919876543210" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition"/>
       </div>
 
       <div class="grid grid-cols-2 gap-3">
@@ -2016,7 +2095,7 @@ tailwind.config = {
         </div>
         <div>
           <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Plan Type</label>
-          <select id="add-plan" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <select id="add-plan" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition">
             <option value="free" selected>Free (Default)</option>
             <option value="paid">Paid</option>
           </select>
@@ -2026,25 +2105,25 @@ tailwind.config = {
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Source</label>
-          <select id="add-source" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <select id="add-source" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition">
             <option value="admin" selected>admin</option>
             <option value="self">self</option>
           </select>
         </div>
         <div>
           <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Initial Time (Minutes)</label>
-          <input type="number" id="add-time-min" min="0" value="30" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+          <input type="number" id="add-time-min" min="0" value="30" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition"/>
         </div>
       </div>
 
       <div>
         <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Custom Referral Code (Optional)</label>
-        <input type="text" id="add-referral" placeholder="Leave empty for auto-generated" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+        <input type="text" id="add-referral" placeholder="Leave empty for auto-generated" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition"/>
       </div>
 
       <div>
         <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Device ID (Optional)</label>
-        <input type="text" id="add-device" placeholder="e.g. dev_mac_a8f9" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+        <input type="text" id="add-device" placeholder="e.g. dev_mac_a8f9" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition"/>
       </div>
 
       <div class="pt-3 border-t border-slate-200 flex justify-end gap-3">
@@ -2069,11 +2148,11 @@ tailwind.config = {
           <i data-lucide="edit-3" class="w-4 h-4"></i>
         </div>
         <div>
-          <h3 class="text-sm font-bold text-white">Edit Customer</h3>
+          <h3 class="text-sm font-bold text-slate-900">Edit Customer</h3>
           <p class="text-[11px] text-slate-500 font-mono" id="edit-phone-display"></p>
         </div>
       </div>
-      <button onclick="closeModal('edit-customer-modal')" class="text-slate-500 hover:text-white transition">
+      <button onclick="closeModal('edit-customer-modal')" class="text-slate-500 hover:text-slate-900 transition">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -2089,7 +2168,7 @@ tailwind.config = {
         </div>
         <div>
           <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Plan Tier</label>
-          <select id="edit-plan" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <select id="edit-plan" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition">
             <option value="free">Free</option>
             <option value="paid">Paid</option>
           </select>
@@ -2099,25 +2178,25 @@ tailwind.config = {
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Source</label>
-          <select id="edit-source" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <select id="edit-source" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition">
             <option value="admin">admin</option>
             <option value="self">self</option>
           </select>
         </div>
         <div>
           <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Remaining Seconds</label>
-          <input type="number" id="edit-time-sec" min="0" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+          <input type="number" id="edit-time-sec" min="0" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition"/>
         </div>
       </div>
 
       <div>
         <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Referral Code Generated</label>
-        <input type="text" id="edit-referral" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+        <input type="text" id="edit-referral" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition"/>
       </div>
 
       <div>
         <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Device ID</label>
-        <input type="text" id="edit-device" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+        <input type="text" id="edit-device" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition"/>
       </div>
 
       <div class="pt-3 border-t border-slate-200 flex justify-end gap-3">
@@ -2142,11 +2221,11 @@ tailwind.config = {
           <i data-lucide="key-round" class="w-4 h-4"></i>
         </div>
         <div>
-          <h3 id="att-title" class="text-sm font-bold text-white">Login Attempts</h3>
+          <h3 id="att-title" class="text-sm font-bold text-slate-900">Login Attempts</h3>
           <p id="att-subtitle" class="text-[11px] text-slate-500 font-mono"></p>
         </div>
       </div>
-      <button onclick="closeModal('attempts-overlay')" class="text-slate-500 hover:text-white transition">
+      <button onclick="closeModal('attempts-overlay')" class="text-slate-500 hover:text-slate-900 transition">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -2183,11 +2262,11 @@ tailwind.config = {
           <i data-lucide="zap" class="w-4 h-4"></i>
         </div>
         <div>
-          <h3 class="text-sm font-bold text-white">Recharge Customer Plan & Time</h3>
+          <h3 class="text-sm font-bold text-slate-900">Recharge Customer Plan & Time</h3>
           <p id="rec-phone-sub" class="text-[11px] text-slate-500 font-mono"></p>
         </div>
       </div>
-      <button onclick="closeModal('recharge-overlay')" class="text-slate-500 hover:text-white transition">
+      <button onclick="closeModal('recharge-overlay')" class="text-slate-500 hover:text-slate-900 transition">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -2196,7 +2275,7 @@ tailwind.config = {
       <div class="p-3 rounded-xl bg-dark-950 border border-slate-200 text-xs flex justify-between items-center">
         <div>
           <span class="text-slate-500 block text-[10px] uppercase">Current Plan</span>
-          <span id="rec-curr-plan" class="font-bold text-white uppercase">—</span>
+          <span id="rec-curr-plan" class="font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded uppercase text-xs">—</span>
         </div>
         <div class="text-right">
           <span class="text-slate-500 block text-[10px] uppercase">Current Time Balance</span>
@@ -2210,7 +2289,7 @@ tailwind.config = {
           <button type="button" id="btn-mode-add" onclick="setRecMode('add')" class="py-1.5 rounded-md text-xs font-semibold bg-indigo-600 text-white transition">
             + Increase Time (Add)
           </button>
-          <button type="button" id="btn-mode-sub" onclick="setRecMode('sub')" class="py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-white transition">
+          <button type="button" id="btn-mode-sub" onclick="setRecMode('sub')" class="py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-900 transition">
             - Decrease Time (Minus)
           </button>
         </div>
@@ -2231,11 +2310,11 @@ tailwind.config = {
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Time Value</label>
-          <input type="number" id="rec-time-val" min="1" value="30" oninput="updateRecPreview()" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+          <input type="number" id="rec-time-val" min="1" value="30" oninput="updateRecPreview()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition"/>
         </div>
         <div>
           <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Unit</label>
-          <select id="rec-time-unit" onchange="updateRecPreview()" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <select id="rec-time-unit" onchange="updateRecPreview()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition">
             <option value="min" selected>Minutes</option>
             <option value="hour">Hours</option>
             <option value="sec">Seconds</option>
@@ -2246,21 +2325,21 @@ tailwind.config = {
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Upgrade / Set Plan</label>
-          <select id="rec-plan" onchange="updateRecPreview()" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <select id="rec-plan" onchange="updateRecPreview()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition">
             <option value="paid" selected>Paid (Upgraded)</option>
             <option value="free">Free</option>
           </select>
         </div>
         <div>
           <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Payment Amount (INR)</label>
-          <input type="number" step="0.01" min="0" id="rec-amount" value="0.00" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+          <input type="number" step="0.01" min="0" id="rec-amount" value="0.00" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition"/>
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Recharge Source</label>
-          <select id="rec-source" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <select id="rec-source" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition">
             <option value="manual" selected>manual</option>
             <option value="admin">admin</option>
             <option value="gateway">gateway</option>
@@ -2268,7 +2347,7 @@ tailwind.config = {
         </div>
         <div>
           <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Payment Status</label>
-          <select id="rec-status" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <select id="rec-status" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition">
             <option value="completed" selected>completed</option>
             <option value="manual">manual</option>
             <option value="pending">pending</option>
@@ -2279,7 +2358,7 @@ tailwind.config = {
 
       <div>
         <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Transaction Notes (Optional)</label>
-        <input type="text" id="rec-notes" placeholder="e.g. Manual bank transfer verified, cash received" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+        <input type="text" id="rec-notes" placeholder="e.g. Manual bank transfer verified, cash received" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition"/>
       </div>
 
       <div class="p-3 rounded-xl bg-indigo-950/40 border border-indigo-800/60 text-xs text-indigo-300" id="rec-preview">
@@ -2310,11 +2389,11 @@ tailwind.config = {
           <i data-lucide="shield" class="w-4 h-4"></i>
         </div>
         <div>
-          <h3 class="text-sm font-bold text-white">Create Admin Account</h3>
+          <h3 class="text-sm font-bold text-slate-900">Create Admin Account</h3>
           <p class="text-[11px] text-slate-500">Stores crypto-hashed bcrypt password</p>
         </div>
       </div>
-      <button onclick="closeModal('add-admin-modal')" class="text-slate-500 hover:text-white p-1 rounded-lg">
+      <button onclick="closeModal('add-admin-modal')" class="text-slate-500 hover:text-slate-900 p-1 rounded-lg">
         <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
@@ -2372,11 +2451,11 @@ tailwind.config = {
           <i data-lucide="edit-3" class="w-4 h-4"></i>
         </div>
         <div>
-          <h3 class="text-sm font-bold text-white">Edit Admin Account</h3>
+          <h3 class="text-sm font-bold text-slate-900">Edit Admin Account</h3>
           <p class="text-[11px] text-slate-500">Update account role, status or password</p>
         </div>
       </div>
-      <button onclick="closeModal('edit-admin-modal')" class="text-slate-500 hover:text-white p-1 rounded-lg">
+      <button onclick="closeModal('edit-admin-modal')" class="text-slate-500 hover:text-slate-900 p-1 rounded-lg">
         <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
@@ -2429,11 +2508,11 @@ tailwind.config = {
           <i data-lucide="key" class="w-4 h-4"></i>
         </div>
         <div>
-          <h3 class="text-sm font-bold text-white">Admin Authentication & JWT</h3>
+          <h3 class="text-sm font-bold text-slate-900">Admin Authentication & JWT</h3>
           <p class="text-[11px] text-slate-500">Calls POST /admin/login (crypto bcrypt verified)</p>
         </div>
       </div>
-      <button onclick="closeModal('admin-login-modal')" class="text-slate-500 hover:text-white p-1 rounded-lg">
+      <button onclick="closeModal('admin-login-modal')" class="text-slate-500 hover:text-slate-900 p-1 rounded-lg">
         <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
@@ -2489,9 +2568,9 @@ tailwind.config = {
         <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
           <i data-lucide="eye" class="w-4 h-4"></i>
         </div>
-        <h3 id="modal-title" class="text-sm font-bold text-white">Document Details</h3>
+        <h3 id="modal-title" class="text-sm font-bold text-slate-900">Document Details</h3>
       </div>
-      <button onclick="closeModal('detail-overlay')" class="text-slate-500 hover:text-white transition">
+      <button onclick="closeModal('detail-overlay')" class="text-slate-500 hover:text-slate-900 transition">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -2723,6 +2802,7 @@ async function performAdminGateLogin(e) {
     document.getElementById('admin-auth-gate').classList.add('hidden');
     checkAdminAuth();
     loadOverview();
+  loadSystemHealth();
     refreshCurrentPage();
   } catch (err) {
     errBox.textContent = err.message;
@@ -2847,6 +2927,7 @@ function showPage(id, btn) {
 
 function refreshCurrentPage() {
   loadOverview();
+  loadSystemHealth();
   const activeNav = document.querySelector('.nav-link.active');
   if (activeNav) {
     if (activeNav.textContent.includes('Customers')) loadCustomers();
@@ -3045,6 +3126,7 @@ async function submitAddCustomer() {
     closeModal('add-customer-modal');
     await loadCustomers();
     await loadOverview();
+  loadSystemHealth();
   } catch (err) {
     alert(`Request error: ${err.message}`);
   } finally {
@@ -3097,6 +3179,7 @@ async function submitEditCustomer() {
     closeModal('edit-customer-modal');
     await loadCustomers();
     await loadOverview();
+  loadSystemHealth();
   } catch (err) {
     alert(`Request error: ${err.message}`);
   } finally {
@@ -3160,7 +3243,7 @@ function openRechargeModal(customer) {
 
   currentRecMode = 'add';
   document.getElementById('btn-mode-add').className = 'py-1.5 rounded-md text-xs font-semibold bg-indigo-600 text-white transition';
-  document.getElementById('btn-mode-sub').className = 'py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-white transition';
+  document.getElementById('btn-mode-sub').className = 'py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-900 transition';
 
   document.getElementById('rec-time-val').value = 30;
   document.getElementById('rec-time-unit').value = 'min';
@@ -3177,10 +3260,10 @@ function setRecMode(mode) {
   currentRecMode = mode;
   if (mode === 'add') {
     document.getElementById('btn-mode-add').className = 'py-1.5 rounded-md text-xs font-semibold bg-indigo-600 text-white transition';
-    document.getElementById('btn-mode-sub').className = 'py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-white transition';
+    document.getElementById('btn-mode-sub').className = 'py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-900 transition';
   } else {
     document.getElementById('btn-mode-sub').className = 'py-1.5 rounded-md text-xs font-semibold bg-red-600 text-white transition';
-    document.getElementById('btn-mode-add').className = 'py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-white transition';
+    document.getElementById('btn-mode-add').className = 'py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-900 transition';
   }
   updateRecPreview();
 }
@@ -3217,7 +3300,7 @@ function updateRecPreview() {
   const targetPlan = document.getElementById('rec-plan').value;
 
   document.getElementById('rec-preview').innerHTML = `Adjustment: <strong class="${deltaColor}">${sign}${delta}s (${sign}${Math.round(delta / 60)}m)</strong> &nbsp;➔&nbsp; ` +
-    `New Balance: <strong class="text-white">${formatSeconds(newBalance)}</strong> &nbsp;|&nbsp; Target Plan: <strong class="text-white">${targetPlan}</strong>`;
+    `New Balance: <strong class="text-slate-900">${formatSeconds(newBalance)}</strong> &nbsp;|&nbsp; Target Plan: <strong class="text-indigo-600">${targetPlan}</strong>`;
 }
 
 async function submitRecharge() {
@@ -3252,6 +3335,7 @@ async function submitRecharge() {
     closeModal('recharge-overlay');
     await loadCustomers();
     await loadOverview();
+  loadSystemHealth();
     if (rData.length) loadRecharges();
   } catch (err) {
     alert(`Error: ${err.message}`);
@@ -3666,7 +3750,7 @@ function renderAdmins(list) {
               ${initials}
             </div>
             <div>
-              <div class="font-bold text-white text-xs">${escapeHtml(a.name || 'Admin')}</div>
+              <div class="font-bold text-slate-900 text-xs">${escapeHtml(a.name || 'Admin')}</div>
               <div class="text-[11px] text-slate-500 font-mono">${escapeHtml(a.email)}</div>
             </div>
           </div>
@@ -3866,6 +3950,74 @@ function copyAdminToken() {
   });
 }
 
+
+// ── Live System & Database Health Monitoring ──
+async function loadSystemHealth(manual = false) {
+  const refreshIcon = document.getElementById('health-refresh-icon');
+  if (refreshIcon && manual) refreshIcon.classList.add('animate-spin');
+
+  const t0 = performance.now();
+  try {
+    const res = await fetch('/admin/health-status');
+    const clientLatency = Math.round(performance.now() - t0);
+    const data = await res.json();
+
+    const apiDot = document.getElementById('health-api-dot');
+    const apiBadge = document.getElementById('health-api-badge');
+    const apiLatency = document.getElementById('health-api-latency');
+    const apiVer = document.getElementById('health-api-ver');
+
+    const dbDot = document.getElementById('health-db-dot');
+    const dbBadge = document.getElementById('health-db-badge');
+    const dbPing = document.getElementById('health-db-ping');
+    const dbName = document.getElementById('health-db-name');
+
+    if (apiBadge) {
+      apiBadge.textContent = 'Online';
+      apiBadge.className = 'font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] border border-emerald-200';
+    }
+    if (apiDot) apiDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+    if (apiLatency) apiLatency.textContent = `${clientLatency} ms`;
+    if (apiVer) apiVer.textContent = `${data.api?.framework || 'FastAPI'} (Py ${data.api?.python || '3.12'})`;
+
+    const isDbOk = data.database?.status === 'connected';
+    if (dbBadge) {
+      dbBadge.textContent = isDbOk ? 'Connected' : 'Degraded';
+      dbBadge.className = isDbOk
+        ? 'font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] border border-emerald-200'
+        : 'font-bold text-red-700 bg-red-50 px-1.5 py-0.5 rounded text-[10px] border border-red-200';
+    }
+    if (dbDot) dbDot.className = isDbOk ? 'w-2 h-2 rounded-full bg-emerald-500' : 'w-2 h-2 rounded-full bg-red-500 animate-ping';
+    if (dbPing) dbPing.textContent = `${data.database?.ping_ms || 0} ms`;
+    if (dbName) dbName.textContent = data.database?.name || 'pas_db';
+
+    if (manual) lucide.createIcons();
+  } catch (err) {
+    const apiBadge = document.getElementById('health-api-badge');
+    const apiDot = document.getElementById('health-api-dot');
+    const dbBadge = document.getElementById('health-db-badge');
+    const dbDot = document.getElementById('health-db-dot');
+
+    if (apiBadge) {
+      apiBadge.textContent = 'Offline';
+      apiBadge.className = 'font-bold text-red-700 bg-red-50 px-1.5 py-0.5 rounded text-[10px] border border-red-200';
+    }
+    if (apiDot) apiDot.className = 'w-2 h-2 rounded-full bg-red-500';
+    if (dbBadge) {
+      dbBadge.textContent = 'Disconnected';
+      dbBadge.className = 'font-bold text-red-700 bg-red-50 px-1.5 py-0.5 rounded text-[10px] border border-red-200';
+    }
+    if (dbDot) dbDot.className = 'w-2 h-2 rounded-full bg-red-500';
+  } finally {
+    if (refreshIcon && manual) {
+      setTimeout(() => refreshIcon.classList.remove('animate-spin'), 400);
+    }
+  }
+}
+
+// Auto-poll health every 15 seconds
+setInterval(loadSystemHealth, 15000);
+
 // Initialize on DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
   if (!getAdminToken()) {
@@ -3875,11 +4027,13 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAdminAuth();
     loadStoreFromApi();
     loadOverview();
+  loadSystemHealth();
   }
   lucide.createIcons();
 });
 loadStoreFromApi();
 loadOverview();
+  loadSystemHealth();
 setTimeout(() => lucide.createIcons(), 100);
 </script>
 </body>
