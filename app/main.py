@@ -32,6 +32,17 @@ app = FastAPI(
 app.include_router(customer.router)
 app.include_router(admin.router)
 
+# Compatibility alias for portal/desktop login
+app.add_api_route(
+    "/api/v1/portal/login",
+    customer.customer_login,
+    methods=["POST"],
+    response_model=customer.CustomerLoginResponse,
+    summary="Portal customer login alias",
+    include_in_schema=True,
+    tags=["customer"],
+)
+
 
 @app.get("/health", tags=["health"])
 async def health() -> dict:

@@ -9,7 +9,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import AliasChoices, BaseModel, Field, field_validator
 
 
 def normalize_indian_phone(v: Any) -> str:
@@ -117,6 +117,7 @@ class CustomerLoginRequest(BaseModel):
     """Single input field for the login endpoint."""
     phone_number: str = Field(
         ...,
+        validation_alias=AliasChoices("phone_number", "phone"),
         description="10-digit Indian mobile number (e.g. +919876543210 or 9876543210, must start with 6, 7, 8, or 9)",
         examples=["+919876543210"],
     )
@@ -155,6 +156,7 @@ class CustomerLoginResponse(BaseModel):
 class OTPVerifyRequest(BaseModel):
     phone_number: str = Field(
         ...,
+        validation_alias=AliasChoices("phone_number", "phone"),
         description="10-digit Indian mobile number (e.g. +919876543210 or 9876543210, must start with 6, 7, 8, or 9)",
         examples=["+919876543210"],
     )
