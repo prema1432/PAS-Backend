@@ -28,6 +28,12 @@ async def main() -> None:
     await events.create_index("phone_number")
     await events.create_index("timestamp")
 
+    # Recharges indexes
+    recharges = db["recharges"]
+    await recharges.create_index("customer_id")
+    await recharges.create_index("phone_number")
+    await recharges.create_index("created_at")
+
     print("Indexes created successfully.")
     client.close()
 

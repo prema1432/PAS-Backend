@@ -25,6 +25,19 @@ class PaymentType(str, Enum):
     paid = "paid"
 
 
+class PaymentStatus(str, Enum):
+    completed = "completed"
+    pending = "pending"
+    manual = "manual"
+    failed = "failed"
+
+
+class RechargeSource(str, Enum):
+    manual = "manual"
+    admin = "admin"
+    gateway = "gateway"
+
+
 # ---------------------------------------------------------------------------
 # MongoDB document model (what gets stored / read from the DB)
 # ---------------------------------------------------------------------------
@@ -126,3 +139,107 @@ class CustomerProfileResponse(BaseModel):
     device_id: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+
+
+class RechargeDocument(BaseModel):
+    """Recharge/Payment transaction document linked to a Customer."""
+    customer_id: Optional[str] = None
+    phone_number: str
+    amount: float = 0.0
+    time_delta_seconds: int = 0
+    previous_time_remaining_seconds: int = 0
+    new_time_remaining_seconds: int = 0
+    previous_payment_type: str = "free"
+    new_payment_type: str = "paid"
+    source: str = "manual"
+    payment_status: str = "completed"
+    notes: Optional[str] = None
+    created_by: Optional[str] = "admin"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class CustomerRechargeRequest(BaseModel):
+    """Request payload for recharging / adjusting customer time and plan."""
+    time_delta_seconds: int = Field(..., description="Seconds to add (+) or subtract (-)")
+    amount: float = Field(default=0.0, ge=0.0, description="Payment amount (currency)")
+    payment_type: PaymentType = Field(default=PaymentType.paid, description="Target payment plan (e.g. free to paid)")
+    source: str = Field(default="manual", description="Payment source, e.g. manual")
+    payment_status: str = Field(default="completed", description="Payment status, e.g. completed, manual")
+    notes: Optional[str] = Field(default=None, max_length=500)
+    created_by: Optional[str] = Field(default="admin", max_length=100)
+
+
+class CustomerCreateRequest(BaseModel):
+    """Payload for creating a new customer via admin."""
+    phone_number: str = Field(..., min_length=7, max_length=15, pattern=r"^\+?[0-9]{7,15}$")
+    otp: Optional[str] = Field(default=None, max_length=6)
+    source: SourceType = Field(default=SourceType.admin)
+    payment_type: PaymentType = Field(default=PaymentType.free)
+    time_remaining_seconds: int = Field(default=1800, ge=0)
+    referral_code_generated: Optional[str] = None
+    device_id: Optional[str] = None
+
+
+class CustomerUpdateRequest(BaseModel):
+    """Payload for updating an existing customer via admin."""
+    otp: Optional[str] = None
+    source: Optional[SourceType] = None
+    payment_type: Optional[PaymentType] = None
+    time_remaining_seconds: Optional[int] = Field(default=None, ge=0)
+    referral_code_generated: Optional[str] = None
+    device_id: Optional[str] = None
+    time_expiry: Optional[datetime] = None
+
+
+# ---------------------------------------------------------------------------
+# Admin Models
+# ---------------------------------------------------------------------------
+
+class AdminRole(str, Enum):
+    superadmin = "superadmin"
+    admin = "admin"
+    moderator = "moderator"
+
+
+class AdminDocument(BaseModel):
+    """Admin record stored in MongoDB 'admins' collection."""
+    email: str                                  # unique, indexed
+    password_hash: str                          # bcrypt hashed
+    name: str = "Admin"
+    role: AdminRole = AdminRole.admin
+    is_active: bool = True
+    last_login: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class AdminLoginRequest(BaseModel):
+    """Admin login request with email and password."""
+    email: str = Field(..., description="Admin email address", examples=["admin@pas.com"])
+    password: str = Field(..., min_length=4, description="Plaintext password to authenticate")
+
+
+class AdminLoginResponse(BaseModel):
+    """JWT response for authenticated admin."""
+    access_token: str
+    token_type: str = "bearer"
+    expires_in_minutes: int
+    admin: dict
+
+
+class AdminCreateRequest(BaseModel):
+    """Payload to create an admin account."""
+    email: str = Field(..., min_length=5, max_length=100)
+    password: str = Field(..., min_length=6, description="Raw password to be crypto-hashed")
+    name: str = Field(default="Admin", max_length=100)
+    role: AdminRole = Field(default=AdminRole.admin)
+    is_active: bool = True
+
+
+class AdminUpdateRequest(BaseModel):
+    """Payload to update an admin account."""
+    name: Optional[str] = Field(default=None, max_length=100)
+    role: Optional[AdminRole] = None
+    is_active: Optional[bool] = None
+    password: Optional[str] = Field(default=None, min_length=6, description="Optional new password to hash")
+

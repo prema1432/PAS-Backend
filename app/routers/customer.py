@@ -106,11 +106,14 @@ async def customer_login(request: Request, body: CustomerLoginRequest) -> Custom
     existing = await col.find_one({"phone_number": body.phone_number})
 
     # ------------------------------------------------------------------
-    # NEW customer — create record, issue JWT immediately
+    # NEW customer — create record, consume 5 mins, issue JWT
     # ------------------------------------------------------------------
     if existing is None:
         otp = _generate_otp()
         session_id = str(uuid.uuid4())
+        initial_seconds = 1800  # 30 mins trial
+        deduct_seconds = 300    # 5 mins consumed on login
+        remaining_seconds = initial_seconds - deduct_seconds
 
         new_doc = CustomerDocument(
             phone_number=body.phone_number,
@@ -122,13 +125,28 @@ async def customer_login(request: Request, body: CustomerLoginRequest) -> Custom
             created_by=body.phone_number,
             updated_by=body.phone_number,
             referral_code_generated=_generate_referral_code(body.phone_number),
-            time_remaining_seconds=1800,                          # 30 minutes free
-            time_expiry=now + timedelta(days=10),                 # expires in 10 days
+            time_remaining_seconds=remaining_seconds,
+            time_expiry=now + timedelta(days=10),
             last_login=now,
             login_session_id=session_id,
             device_id=body.device_id,
         )
         await col.insert_one(new_doc.model_dump())
+
+        # Log usage history
+        await db["usage_history"].insert_one({
+            "phone_number": body.phone_number,
+            "action": "initial_login_consumption",
+            "description": f"New account registered. 5 minutes (300s) consumed on device ({body.device_id or 'unknown'}).",
+            "minutes_consumed": round(deduct_seconds / 60, 1),
+            "seconds_consumed": deduct_seconds,
+            "previous_time_remaining_seconds": initial_seconds,
+            "new_time_remaining_seconds": remaining_seconds,
+            "device_id": body.device_id,
+            "session_id": session_id,
+            "ip_address": request.client.host if request.client else "unknown",
+            "created_at": now,
+        })
 
         token = create_jwt(body.phone_number, session_id)
         await record_login_event(
@@ -139,37 +157,89 @@ async def customer_login(request: Request, body: CustomerLoginRequest) -> Custom
         )
         return CustomerLoginResponse(
             is_new_customer=True,
-            message="New account created. OTP sent (deliver via SMS in production).",
+            message="New account created. 5 minutes deducted from subscription balance.",
             otp=otp,
             jwt_token=token,
         )
 
     # ------------------------------------------------------------------
-    # EXISTING customer — check subscription
+    # EXISTING customer — check subscription and available minutes
     # ------------------------------------------------------------------
     if not _subscription_active(existing):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your Free/Paid limit has expired. Please recharge.",
+            detail="Your Free/Paid subscription has expired. Please recharge.",
         )
 
-    # Step 2: OTP provided — validate and issue JWT
+    if existing.get("time_remaining_seconds", 0) <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No available minutes remaining (0 mins). Please recharge your subscription to log in.",
+        )
+
+    # Step 2: OTP provided — validate, force logout previous device, consume 5 mins, issue JWT
     if body.otp is not None:
         _check_otp(existing, body.otp)
 
+        current_seconds = existing.get("time_remaining_seconds", 0)
+        if current_seconds <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No available minutes remaining (0 mins). Please recharge your subscription to log in.",
+            )
+
+        # Force logout previous session if exists
+        old_sid = existing.get("login_session_id")
+        if old_sid:
+            await db["usage_history"].insert_one({
+                "phone_number": body.phone_number,
+                "action": "device_switch_force_logout",
+                "description": f"Previous active session ({old_sid[:8]}…) force-logged out due to login on device ({body.device_id or 'unknown'}).",
+                "minutes_consumed": 0,
+                "seconds_consumed": 0,
+                "previous_time_remaining_seconds": current_seconds,
+                "new_time_remaining_seconds": current_seconds,
+                "device_id": body.device_id,
+                "session_id": old_sid,
+                "ip_address": request.client.host if request.client else "unknown",
+                "created_at": now,
+            })
+
+        # Deduct 5 minutes (300 seconds)
+        deduct_seconds = min(current_seconds, 300)
+        new_seconds = max(0, current_seconds - deduct_seconds)
         session_id = str(uuid.uuid4())
+
         await col.update_one(
             {"phone_number": body.phone_number},
             {
                 "$set": {
                     "last_login": now,
                     "login_session_id": session_id,
+                    "time_remaining_seconds": new_seconds,
                     "device_id": body.device_id or existing.get("device_id"),
                     "updated_by": body.phone_number,
                     "updated_at": now,
+                    "otp": None,
                 }
             },
         )
+
+        # Log consumption in usage history
+        await db["usage_history"].insert_one({
+            "phone_number": body.phone_number,
+            "action": "login_consumption",
+            "description": f"Login verified. 5 minutes (300s) consumed on device ({body.device_id or 'unknown'}).",
+            "minutes_consumed": round(deduct_seconds / 60, 1),
+            "seconds_consumed": deduct_seconds,
+            "previous_time_remaining_seconds": current_seconds,
+            "new_time_remaining_seconds": new_seconds,
+            "device_id": body.device_id,
+            "session_id": session_id,
+            "ip_address": request.client.host if request.client else "unknown",
+            "created_at": now,
+        })
+
         token = create_jwt(body.phone_number, session_id)
         await record_login_event(
             request=request,
@@ -179,7 +249,7 @@ async def customer_login(request: Request, body: CustomerLoginRequest) -> Custom
         )
         return CustomerLoginResponse(
             is_new_customer=False,
-            message="Login successful.",
+            message="Login successful. 5 minutes deducted from subscription balance.",
             otp=body.otp,
             jwt_token=token,
         )
