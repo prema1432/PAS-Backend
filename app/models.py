@@ -194,6 +194,22 @@ class CustomerProfileResponse(BaseModel):
     updated_at: Optional[datetime] = None
 
 
+class CustomerHeartbeatRequest(BaseModel):
+    """Payload to report time consumed during active sessions."""
+    seconds_consumed: int = Field(default=60, ge=1, le=3600, description="Seconds of usage to decrement")
+    device_id: Optional[str] = Field(default=None, max_length=256)
+    activity: Optional[str] = Field(default="live_session", max_length=100)
+
+
+class CustomerHeartbeatResponse(BaseModel):
+    """Result of time decrement and sync."""
+    phone_number: str
+    time_remaining_seconds: int
+    time_remaining_minutes: float
+    is_active: bool
+    message: str
+
+
 class RechargeDocument(BaseModel):
     """Recharge/Payment transaction document linked to a Customer."""
     model_config = {"use_enum_values": True}

@@ -20,6 +20,8 @@ from app.database import get_db
 from app.login_event import record_login_event
 from app.models import (
     CustomerDocument,
+    CustomerHeartbeatRequest,
+    CustomerHeartbeatResponse,
     CustomerLoginRequest,
     CustomerLoginResponse,
     CustomerProfileResponse,
@@ -326,5 +328,84 @@ async def get_me(
         created_at=doc.get("created_at"),
         updated_at=doc.get("updated_at"),
     )
+
+
+@router.post(
+    "/heartbeat",
+    response_model=CustomerHeartbeatResponse,
+    summary="Decrement remaining time and sync session",
+    status_code=status.HTTP_200_OK,
+)
+async def customer_heartbeat(
+    request: Request,
+    body: CustomerHeartbeatRequest = CustomerHeartbeatRequest(),
+    token: dict = Depends(get_current_customer),
+) -> CustomerHeartbeatResponse:
+    """
+    Called periodically by the client to report elapsed seconds and decrement
+    time_remaining_seconds in the database.
+    """
+    phone_number: str = token["sub"]
+    db = get_db()
+    col = db[COLLECTION]
+    now = datetime.now(tz=timezone.utc)
+
+    clean_phone = phone_number.replace("+91", "").strip()
+    phone_filter = {"$in": [phone_number, clean_phone, f"+91{clean_phone}"]}
+    doc = await col.find_one({"phone_number": phone_filter})
+
+    if doc is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Customer not found.",
+        )
+
+    current_seconds = doc.get("time_remaining_seconds", 0)
+    if current_seconds <= 0:
+        return CustomerHeartbeatResponse(
+            phone_number=doc["phone_number"],
+            time_remaining_seconds=0,
+            time_remaining_minutes=0.0,
+            is_active=False,
+            message="Subscription time balance exhausted (0s remaining).",
+        )
+
+    deduct = min(current_seconds, max(1, body.seconds_consumed))
+    new_seconds = max(0, current_seconds - deduct)
+
+    await col.update_one(
+        {"_id": doc["_id"]},
+        {
+            "$set": {
+                "time_remaining_seconds": new_seconds,
+                "updated_at": now,
+                "last_login": now,
+            }
+        },
+    )
+
+    # Log usage history
+    await db["usage_history"].insert_one({
+        "phone_number": doc["phone_number"],
+        "action": "session_heartbeat_consumption",
+        "description": f"Session heartbeat: consumed {deduct}s ({round(deduct / 60, 1)}m) for activity '{body.activity or 'live_session'}'.",
+        "minutes_consumed": round(deduct / 60, 1),
+        "seconds_consumed": deduct,
+        "previous_time_remaining_seconds": current_seconds,
+        "new_time_remaining_seconds": new_seconds,
+        "device_id": body.device_id or doc.get("device_id"),
+        "session_id": token.get("sid", doc.get("login_session_id")),
+        "ip_address": request.client.host if request.client else "unknown",
+        "created_at": now,
+    })
+
+    return CustomerHeartbeatResponse(
+        phone_number=doc["phone_number"],
+        time_remaining_seconds=new_seconds,
+        time_remaining_minutes=round(new_seconds / 60, 1),
+        is_active=new_seconds > 0,
+        message=f"Deducted {deduct}s. Balance: {new_seconds}s.",
+    )
+
 
 
