@@ -54,18 +54,16 @@ def _otp_expiry() -> datetime:
 
 
 def _subscription_active(doc: dict) -> bool:
-    expiry = doc.get("time_expiry")
     remaining = doc.get("time_remaining_seconds", 0)
-    if expiry is None and remaining == 0:
-        return True  # free account, no expiry set yet
-    now = datetime.now(tz=timezone.utc)
+    if remaining <= 0:
+        return False
+    expiry = doc.get("time_expiry")
     if expiry:
+        now = datetime.now(tz=timezone.utc)
         if expiry.tzinfo is None:
             expiry = expiry.replace(tzinfo=timezone.utc)
         if now > expiry:
             return False
-    if remaining < 0:
-        return False
     return True
 
 
@@ -383,15 +381,17 @@ async def customer_heartbeat(
     deduct = min(current_seconds, max(1, body.seconds_consumed))
     new_seconds = max(0, current_seconds - deduct)
 
+    set_update = {
+        "time_remaining_seconds": new_seconds,
+        "updated_at": now,
+        "last_login": now,
+    }
+    if new_seconds <= 0:
+        set_update["login_session_id"] = None
+
     await col.update_one(
         {"_id": doc["_id"]},
-        {
-            "$set": {
-                "time_remaining_seconds": new_seconds,
-                "updated_at": now,
-                "last_login": now,
-            }
-        },
+        {"$set": set_update},
     )
 
     # Log usage history
@@ -414,7 +414,7 @@ async def customer_heartbeat(
         time_remaining_seconds=new_seconds,
         time_remaining_minutes=round(new_seconds / 60, 1),
         is_active=new_seconds > 0,
-        message=f"Deducted {deduct}s. Balance: {new_seconds}s.",
+        message="Subscription balance active." if new_seconds > 0 else "Subscription time balance exhausted (0 mins remaining). Please recharge.",
     )
 
 

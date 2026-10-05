@@ -123,6 +123,28 @@ async def get_current_customer(
                         detail="Session invalidated. Your account was logged in from another device or forced logout.",
                         headers={"WWW-Authenticate": "Bearer"},
                     )
+
+                # Check if balance is exhausted
+                remaining_sec = cust.get("time_remaining_seconds", 0)
+                if remaining_sec <= 0:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="No time remaining on this account (0 mins). Please recharge your subscription to continue.",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+
+                # Check if subscription period expired
+                expiry = cust.get("time_expiry")
+                if expiry:
+                    now = datetime.now(tz=timezone.utc)
+                    if expiry.tzinfo is None:
+                        expiry = expiry.replace(tzinfo=timezone.utc)
+                    if now > expiry:
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Your subscription has expired. Please recharge your account.",
+                            headers={"WWW-Authenticate": "Bearer"},
+                        )
         except HTTPException:
             raise
         except Exception:
