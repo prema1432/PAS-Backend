@@ -299,7 +299,9 @@ async def get_me(
     phone_number: str = token["sub"]
 
     db = get_db()
-    doc = await db[COLLECTION].find_one({"phone_number": phone_number})
+    clean_phone = phone_number.replace("+91", "").strip()
+    phone_filter = {"$in": [phone_number, clean_phone, f"+91{clean_phone}"]}
+    doc = await db[COLLECTION].find_one({"phone_number": phone_filter})
 
     if doc is None:
         raise HTTPException(
@@ -309,8 +311,8 @@ async def get_me(
 
     return CustomerProfileResponse(
         phone_number=doc["phone_number"],
-        source=doc.get("source", "self"),
-        payment_type=doc.get("payment_type", "free"),
+        source=doc.get("source", SourceType.self_),
+        payment_type=doc.get("payment_type", PaymentType.free),
         activation_date=doc.get("activation_date"),
         created_by=doc.get("created_by"),
         updated_by=doc.get("updated_by"),

@@ -177,20 +177,20 @@ class OTPVerifyResponse(BaseModel):
 class CustomerProfileResponse(BaseModel):
     """Response for GET /customer/me — everything except OTP fields."""
     phone_number: str
-    source: SourceType
-    payment_type: PaymentType
+    source: SourceType = SourceType.self_
+    payment_type: PaymentType = PaymentType.free
     activation_date: Optional[datetime] = None
     created_by: Optional[str] = None
     updated_by: Optional[str] = None
     referral_code_used: Optional[str] = None
     referral_code_generated: Optional[str] = None
-    time_remaining_seconds: int
+    time_remaining_seconds: int = 0
     time_expiry: Optional[datetime] = None
     last_login: Optional[datetime] = None
     login_session_id: Optional[str] = None
     device_id: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 
 class RechargeDocument(BaseModel):
