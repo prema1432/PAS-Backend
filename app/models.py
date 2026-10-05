@@ -4,11 +4,44 @@ Pydantic models for the Customer document and API schemas.
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+
+def normalize_indian_phone(v: Any) -> str:
+    """
+    Validate and normalize Indian mobile phone numbers.
+    - Strips whitespace, hyphens, dots, and parentheses.
+    - Removes leading +91, 91, or 0.
+    - Validates that the 10-digit number starts with 6, 7, 8, or 9 (rejects 0-5).
+    - Returns standardized E.164 format: '+91XXXXXXXXXX'.
+    """
+    if not isinstance(v, str):
+        raise ValueError("Phone number must be a string.")
+
+    cleaned = re.sub(r"[\s\-\.\(\)]", "", v.strip())
+    if cleaned.startswith("+91"):
+        cleaned = cleaned[3:]
+    elif cleaned.startswith("91") and len(cleaned) == 12:
+        cleaned = cleaned[2:]
+    elif cleaned.startswith("0") and len(cleaned) == 11:
+        cleaned = cleaned[1:]
+
+    if not re.match(r"^[0-9]{10}$", cleaned):
+        raise ValueError(
+            "Invalid phone number format. Indian mobile numbers must be 10 digits (e.g. +919876543210 or 9876543210)."
+        )
+
+    if cleaned[0] not in ("6", "7", "8", "9"):
+        raise ValueError(
+            f"Invalid mobile number '{cleaned}'. Indian mobile numbers must start with 6, 7, 8, or 9 (not 1 to 5)."
+        )
+
+    return f"+91{cleaned}"
 
 
 # ---------------------------------------------------------------------------
@@ -45,7 +78,7 @@ class RechargeSource(str, Enum):
 class CustomerDocument(BaseModel):
     """Full customer record as stored in MongoDB."""
 
-    phone_number: str                           # unique, indexed
+    phone_number: str                           # unique, indexed (format: +91XXXXXXXXXX)
     otp: Optional[str] = None                  # current 6-digit OTP (hashed or plain)
     otp_expires_at: Optional[datetime] = None  # when the OTP expires
 
@@ -70,6 +103,11 @@ class CustomerDocument(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+    @field_validator("phone_number", mode="before")
+    @classmethod
+    def validate_phone(cls, v: Any) -> str:
+        return normalize_indian_phone(v)
+
 
 # ---------------------------------------------------------------------------
 # API request / response schemas
@@ -79,9 +117,7 @@ class CustomerLoginRequest(BaseModel):
     """Single input field for the login endpoint."""
     phone_number: str = Field(
         ...,
-        min_length=7,
-        max_length=15,
-        pattern=r"^\+?[0-9]{7,15}$",
+        description="10-digit Indian mobile number (e.g. +919876543210 or 9876543210, must start with 6, 7, 8, or 9)",
         examples=["+919876543210"],
     )
     device_id: Optional[str] = Field(default=None, max_length=256)
@@ -92,6 +128,11 @@ class CustomerLoginRequest(BaseModel):
         pattern=r"^\d{6}$",
         description="Submit the 6-digit OTP received in the first step to get a JWT.",
     )
+
+    @field_validator("phone_number", mode="before")
+    @classmethod
+    def validate_phone(cls, v: Any) -> str:
+        return normalize_indian_phone(v)
 
 
 class CustomerLoginResponse(BaseModel):
@@ -112,9 +153,18 @@ class CustomerLoginResponse(BaseModel):
 
 
 class OTPVerifyRequest(BaseModel):
-    phone_number: str = Field(..., pattern=r"^\+?[0-9]{7,15}$")
+    phone_number: str = Field(
+        ...,
+        description="10-digit Indian mobile number (e.g. +919876543210 or 9876543210, must start with 6, 7, 8, or 9)",
+        examples=["+919876543210"],
+    )
     otp: str = Field(..., min_length=6, max_length=6, pattern=r"^\d{6}$")
     device_id: Optional[str] = Field(default=None, max_length=256)
+
+    @field_validator("phone_number", mode="before")
+    @classmethod
+    def validate_phone(cls, v: Any) -> str:
+        return normalize_indian_phone(v)
 
 
 class OTPVerifyResponse(BaseModel):
@@ -157,6 +207,11 @@ class RechargeDocument(BaseModel):
     created_by: Optional[str] = "admin"
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+    @field_validator("phone_number", mode="before")
+    @classmethod
+    def validate_phone(cls, v: Any) -> str:
+        return normalize_indian_phone(v)
+
 
 class CustomerRechargeRequest(BaseModel):
     """Request payload for recharging / adjusting customer time and plan."""
@@ -171,13 +226,22 @@ class CustomerRechargeRequest(BaseModel):
 
 class CustomerCreateRequest(BaseModel):
     """Payload for creating a new customer via admin."""
-    phone_number: str = Field(..., min_length=7, max_length=15, pattern=r"^\+?[0-9]{7,15}$")
+    phone_number: str = Field(
+        ...,
+        description="10-digit Indian mobile number (e.g. +919876543210 or 9876543210, must start with 6, 7, 8, or 9)",
+        examples=["+919876543210"],
+    )
     otp: Optional[str] = Field(default=None, max_length=6)
     source: SourceType = Field(default=SourceType.admin)
     payment_type: PaymentType = Field(default=PaymentType.free)
     time_remaining_seconds: int = Field(default=1800, ge=0)
     referral_code_generated: Optional[str] = None
     device_id: Optional[str] = None
+
+    @field_validator("phone_number", mode="before")
+    @classmethod
+    def validate_phone(cls, v: Any) -> str:
+        return normalize_indian_phone(v)
 
 
 class CustomerUpdateRequest(BaseModel):

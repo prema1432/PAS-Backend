@@ -102,8 +102,8 @@ async def customer_login(request: Request, body: CustomerLoginRequest) -> Custom
     db = get_db()
     col = db[COLLECTION]
     now = datetime.now(tz=timezone.utc)
-
-    existing = await col.find_one({"phone_number": body.phone_number})
+    phone_filter = {"$in": [body.phone_number, body.phone_number.replace("+91", "")]}
+    existing = await col.find_one({"phone_number": phone_filter})
 
     # ------------------------------------------------------------------
     # NEW customer — create record, consume 5 mins, issue JWT

@@ -35,9 +35,20 @@ from app.models import (
     CustomerUpdateRequest,
     PaymentType,
     SourceType,
+    normalize_indian_phone,
 )
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+def _phone_filter(phone: str) -> dict:
+    """Matches a phone number flexibly with or without +91."""
+    try:
+        norm = normalize_indian_phone(phone)
+        raw = norm.replace("+91", "")
+        return {"$in": [norm, raw, phone]}
+    except Exception:
+        return {"$in": [phone, f"+91{phone}"]}
 
 
 def _serialize(doc: dict) -> dict:
@@ -98,12 +109,12 @@ async def list_customers(
 @router.get("/customers/{phone}/usage-history", summary="Get customer minutes consumption and usage history")
 async def get_customer_usage_history(phone: str = Path(...)) -> dict:
     db = get_db()
-    cust = await db["customers"].find_one({"phone_number": phone})
+    cust = await db["customers"].find_one({"phone_number": _phone_filter(phone)})
     if not cust:
         raise HTTPException(status_code=404, detail="Customer not found.")
     
-    usage_docs = await db["usage_history"].find({"phone_number": phone}).sort("created_at", -1).to_list(length=200)
-    event_docs = await db["login_events"].find({"phone_number": phone}).sort("timestamp", -1).to_list(length=100)
+    usage_docs = await db["usage_history"].find({"phone_number": _phone_filter(phone)}).sort("created_at", -1).to_list(length=200)
+    event_docs = await db["login_events"].find({"phone_number": _phone_filter(phone)}).sort("timestamp", -1).to_list(length=100)
     
     total_consumed_seconds = sum(h.get("seconds_consumed", 0) for h in usage_docs)
     total_consumed_minutes = round(total_consumed_seconds / 60, 1)
@@ -126,7 +137,7 @@ async def get_customer_usage_history(phone: str = Path(...)) -> dict:
 @router.post("/customers/{phone}/force-logout", summary="Force logout all active sessions for a customer")
 async def force_logout_customer(phone: str = Path(...)) -> dict:
     db = get_db()
-    cust = await db["customers"].find_one({"phone_number": phone})
+    cust = await db["customers"].find_one({"phone_number": _phone_filter(phone)})
     if not cust:
         raise HTTPException(status_code=404, detail="Customer not found.")
 
@@ -134,7 +145,7 @@ async def force_logout_customer(phone: str = Path(...)) -> dict:
     now = datetime.now(tz=timezone.utc)
     
     await db["customers"].update_one(
-        {"phone_number": phone},
+        {"phone_number": _phone_filter(phone)},
         {"$set": {"login_session_id": None, "updated_at": now, "updated_by": "admin"}}
     )
 
@@ -162,7 +173,7 @@ async def force_logout_customer(phone: str = Path(...)) -> dict:
 @router.get("/customers/{phone}", summary="Get customer by phone number")
 async def get_customer(phone: str = Path(...)) -> dict:
     db = get_db()
-    doc = await db["customers"].find_one({"phone_number": phone})
+    doc = await db["customers"].find_one({"phone_number": _phone_filter(phone)})
     if not doc:
         raise HTTPException(status_code=404, detail="Customer not found.")
     return _serialize(doc)
@@ -205,7 +216,7 @@ async def create_customer(body: CustomerCreateRequest) -> dict:
 @router.put("/customers/{phone}", summary="Edit customer")
 async def edit_customer(phone: str = Path(...), body: CustomerUpdateRequest = ...) -> dict:
     db = get_db()
-    existing = await db["customers"].find_one({"phone_number": phone})
+    existing = await db["customers"].find_one({"phone_number": _phone_filter(phone)})
     if not existing:
         raise HTTPException(status_code=404, detail="Customer not found.")
 
@@ -233,8 +244,8 @@ async def edit_customer(phone: str = Path(...), body: CustomerUpdateRequest = ..
     update_fields["updated_at"] = now
     update_fields["updated_by"] = "admin"
 
-    await db["customers"].update_one({"phone_number": phone}, {"$set": update_fields})
-    updated = await db["customers"].find_one({"phone_number": phone})
+    await db["customers"].update_one({"phone_number": _phone_filter(phone)}, {"$set": update_fields})
+    updated = await db["customers"].find_one({"phone_number": _phone_filter(phone)})
     return {"message": f"Customer {phone} updated successfully.", "data": _serialize(updated)}
 
 
@@ -243,7 +254,7 @@ async def refresh_otp(phone: str = Path(...)) -> dict:
     otp = "".join(random.choices(string.digits, k=6))
     db = get_db()
     result = await db["customers"].update_one(
-        {"phone_number": phone},
+        {"phone_number": _phone_filter(phone)},
         {"$set": {"otp": otp, "otp_expires_at": None, "updated_at": datetime.now(tz=timezone.utc)}},
     )
     if result.matched_count == 0:
@@ -264,7 +275,7 @@ async def recharge_customer(
     - Sets source ('manual') and payment_status ('completed' / 'manual')
     """
     db = get_db()
-    customer = await db["customers"].find_one({"phone_number": phone})
+    customer = await db["customers"].find_one({"phone_number": _phone_filter(phone)})
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found.")
 
@@ -315,8 +326,8 @@ async def recharge_customer(
         if not curr_exp or curr_exp < now:
             update_set["time_expiry"] = now + timedelta(days=30)
 
-    await db["customers"].update_one({"phone_number": phone}, {"$set": update_set})
-    updated_customer = await db["customers"].find_one({"phone_number": phone})
+    await db["customers"].update_one({"phone_number": _phone_filter(phone)}, {"$set": update_set})
+    updated_customer = await db["customers"].find_one({"phone_number": _phone_filter(phone)})
 
     return {
         "message": f"Customer {phone} recharged successfully. Plan: {new_plan}, time left: {new_time}s.",
@@ -328,7 +339,7 @@ async def recharge_customer(
 @router.get("/customers/{phone}/recharges", summary="List recharges for a customer")
 async def get_customer_recharges(phone: str = Path(...)) -> dict:
     db = get_db()
-    docs = await db["recharges"].find({"phone_number": phone}).sort("created_at", -1).to_list(length=100)
+    docs = await db["recharges"].find({"phone_number": _phone_filter(phone)}).sort("created_at", -1).to_list(length=100)
     return {"total": len(docs), "data": [_serialize(d) for d in docs]}
 
 
@@ -338,8 +349,8 @@ async def get_customer_login_events(
     limit: int = Query(50, ge=1, le=200),
 ) -> dict:
     db = get_db()
-    docs = await db["login_events"].find({"phone_number": phone}).sort("timestamp", -1).limit(limit).to_list(length=limit)
-    total = await db["login_events"].count_documents({"phone_number": phone})
+    docs = await db["login_events"].find({"phone_number": _phone_filter(phone)}).sort("timestamp", -1).limit(limit).to_list(length=limit)
+    total = await db["login_events"].count_documents({"phone_number": _phone_filter(phone)})
     return {"total": total, "phone_number": phone, "data": [_serialize(d) for d in docs]}
 
 
@@ -462,11 +473,11 @@ async def list_sessions(
 async def terminate_customer_session(phone: str = Path(...)) -> dict:
     """Terminates customer session and logs them out immediately."""
     db = get_db()
-    cust = await db["customers"].find_one({"phone_number": phone})
+    cust = await db["customers"].find_one({"phone_number": _phone_filter(phone)})
     if not cust:
         raise HTTPException(status_code=404, detail="Customer not found.")
     await db["customers"].update_one(
-        {"phone_number": phone},
+        {"phone_number": _phone_filter(phone)},
         {"$set": {"login_session_id": None, "updated_at": datetime.now(tz=timezone.utc), "updated_by": "admin"}},
     )
     return {"message": f"Login session terminated for customer {phone}. Active token invalidated.", "phone_number": phone, "session_status": "terminated"}
@@ -476,13 +487,13 @@ async def terminate_customer_session(phone: str = Path(...)) -> dict:
 async def activate_customer_session(phone: str = Path(...)) -> dict:
     """Generates a fresh active login session for a customer."""
     db = get_db()
-    cust = await db["customers"].find_one({"phone_number": phone})
+    cust = await db["customers"].find_one({"phone_number": _phone_filter(phone)})
     if not cust:
         raise HTTPException(status_code=404, detail="Customer not found.")
     new_sid = str(uuid.uuid4())
     now = datetime.now(tz=timezone.utc)
     await db["customers"].update_one(
-        {"phone_number": phone},
+        {"phone_number": _phone_filter(phone)},
         {"$set": {"login_session_id": new_sid, "last_login": now, "updated_at": now, "updated_by": "admin"}},
     )
     return {"message": f"Login session generated for customer {phone}.", "phone_number": phone, "session_id": new_sid, "session_status": "active"}
