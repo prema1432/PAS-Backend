@@ -6,6 +6,8 @@ Served at /admin/* and used by the dashboard at /admin.
 from __future__ import annotations
 
 import io
+import sys
+import time
 import json
 import random
 import string
@@ -506,7 +508,7 @@ async def export_data(
     device_type: Optional[str] = Query(None),
     role: Optional[str] = Query(None),
     is_active: Optional[str] = Query(None),
-):
+) -> Response:
     import io
     import openpyxl
     from openpyxl.styles import Alignment, Font, PatternFill
@@ -1051,6 +1053,7 @@ async def update_admin(email: str, payload: AdminUpdateRequest) -> dict:
 @router.get("/health-status", tags=["admin"], include_in_schema=False)
 async def admin_health_status() -> dict:
     """Detailed health check for admin dashboard sidebar."""
+    import sys
     import time
     from app.database import get_db
     
@@ -1088,7 +1091,7 @@ async def admin_health_status() -> dict:
             "status": db_status,
             "ping_ms": db_ping_ms,
             "collections": collections,
-        }
+        },
     }
 
 
@@ -1899,7 +1902,7 @@ tailwind.config = {
               Last saved: <span id="store-last-saved" class="font-mono text-slate-700">—</span>
             </div>
             <div class="flex items-center gap-3">
-              <button type="button" onclick="resetStoreDefaults()" class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium transition">
+              <button type="button" onclick="resetStoreDefaults()" class="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium transition">
                 Reset System Defaults
               </button>
               <button type="submit" id="btn-save-store" class="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">
@@ -1992,7 +1995,7 @@ tailwind.config = {
 
     <div class="mt-6 flex justify-between items-center pt-4 border-t border-slate-200">
       <span class="text-[11px] text-slate-500">Each login consumes 5 mins (300s). Extra devices auto force-logged out.</span>
-      <button onclick="closeModal('customer-usage-modal')" class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium transition">
+      <button onclick="closeModal('customer-usage-modal')" class="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium transition">
         Close
       </button>
     </div>
@@ -2051,7 +2054,7 @@ tailwind.config = {
     </div>
 
     <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-200">
-      <button onclick="closeModal('export-modal')" class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium transition">
+      <button onclick="closeModal('export-modal')" class="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium transition">
         Cancel
       </button>
       <button onclick="executeExport()" class="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">
@@ -2090,7 +2093,7 @@ tailwind.config = {
           <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Initial OTP</label>
           <div class="flex gap-2">
             <input type="text" id="add-otp" maxlength="6" placeholder="Auto" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-amber-700 font-mono tracking-widest focus:outline-none focus:border-indigo-500 transition"/>
-            <button type="button" onclick="generateRandomOtp('add-otp')" class="px-2.5 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs transition" title="Generate random OTP">↻</button>
+            <button type="button" onclick="generateRandomOtp('add-otp')" class="px-2.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs transition" title="Generate random OTP">↻</button>
           </div>
         </div>
         <div>
@@ -2127,7 +2130,7 @@ tailwind.config = {
       </div>
 
       <div class="pt-3 border-t border-slate-200 flex justify-end gap-3">
-        <button type="button" onclick="closeModal('add-customer-modal')" class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium transition">Cancel</button>
+        <button type="button" onclick="closeModal('add-customer-modal')" class="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium transition">Cancel</button>
         <button type="submit" id="btn-submit-add-customer" class="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">
           <i data-lucide="user-plus" class="w-4 h-4"></i>
           <span>Create Customer</span>
@@ -2163,7 +2166,7 @@ tailwind.config = {
           <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Customer OTP</label>
           <div class="flex gap-2">
             <input type="text" id="edit-otp" maxlength="6" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-amber-700 font-mono tracking-widest focus:outline-none focus:border-indigo-500 transition"/>
-            <button type="button" onclick="generateRandomOtp('edit-otp')" class="px-2.5 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs transition" title="Generate random OTP">↻</button>
+            <button type="button" onclick="generateRandomOtp('edit-otp')" class="px-2.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs transition" title="Generate random OTP">↻</button>
           </div>
         </div>
         <div>
@@ -2200,7 +2203,7 @@ tailwind.config = {
       </div>
 
       <div class="pt-3 border-t border-slate-200 flex justify-end gap-3">
-        <button type="button" onclick="closeModal('edit-customer-modal')" class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium transition">Cancel</button>
+        <button type="button" onclick="closeModal('edit-customer-modal')" class="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium transition">Cancel</button>
         <button type="submit" id="btn-submit-edit-customer" class="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">
           <i data-lucide="check" class="w-4 h-4"></i>
           <span>Save Changes</span>
@@ -2298,12 +2301,12 @@ tailwind.config = {
       <div>
         <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Quick Presets</label>
         <div class="flex flex-wrap gap-2">
-          <button type="button" onclick="applyQuickTime(15, 'min')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200 transition">+15m</button>
-          <button type="button" onclick="applyQuickTime(30, 'min')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200 transition">+30m</button>
-          <button type="button" onclick="applyQuickTime(1, 'hour')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200 transition">+1h</button>
-          <button type="button" onclick="applyQuickTime(2, 'hour')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200 transition">+2h</button>
-          <button type="button" onclick="applyQuickTime(-15, 'min')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 text-red-300 text-xs font-medium border border-red-900/40 transition">-15m</button>
-          <button type="button" onclick="applyQuickTime(-30, 'min')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 text-red-300 text-xs font-medium border border-red-900/40 transition">-30m</button>
+          <button type="button" onclick="applyQuickTime(15, 'min')" class="px-2.5 py-1 rounded bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 transition">+15m</button>
+          <button type="button" onclick="applyQuickTime(30, 'min')" class="px-2.5 py-1 rounded bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 transition">+30m</button>
+          <button type="button" onclick="applyQuickTime(1, 'hour')" class="px-2.5 py-1 rounded bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 transition">+1h</button>
+          <button type="button" onclick="applyQuickTime(2, 'hour')" class="px-2.5 py-1 rounded bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 transition">+2h</button>
+          <button type="button" onclick="applyQuickTime(-15, 'min')" class="px-2.5 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition">-15m</button>
+          <button type="button" onclick="applyQuickTime(-30, 'min')" class="px-2.5 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition">-30m</button>
         </div>
       </div>
 
@@ -2366,7 +2369,7 @@ tailwind.config = {
       </div>
 
       <div class="pt-3 border-t border-slate-200 flex justify-end gap-3">
-        <button type="button" onclick="closeModal('recharge-overlay')" class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium transition">Cancel</button>
+        <button type="button" onclick="closeModal('recharge-overlay')" class="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium transition">Cancel</button>
         <button type="submit" id="rec-submit-btn" class="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition">
           <i data-lucide="zap" class="w-4 h-4"></i>
           <span>Apply Recharge</span>
@@ -2435,7 +2438,7 @@ tailwind.config = {
         </div>
       </div>
       <div class="pt-2 flex justify-end gap-2">
-        <button type="button" onclick="closeModal('add-admin-modal')" class="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-800 text-slate-700 text-xs font-medium">Cancel</button>
+        <button type="button" onclick="closeModal('add-admin-modal')" class="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-medium">Cancel</button>
         <button type="submit" class="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-md">Create Admin</button>
       </div>
     </form>
@@ -2492,7 +2495,7 @@ tailwind.config = {
         <p class="text-[10px] text-slate-500 mt-1">If provided, this will replace the current password hash with a new bcrypt hash.</p>
       </div>
       <div class="pt-2 flex justify-end gap-2">
-        <button type="button" onclick="closeModal('edit-admin-modal')" class="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-800 text-slate-700 text-xs font-medium">Cancel</button>
+        <button type="button" onclick="closeModal('edit-admin-modal')" class="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-medium">Cancel</button>
         <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md">Save Changes</button>
       </div>
     </form>
@@ -2542,7 +2545,7 @@ tailwind.config = {
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           <span>HTTP 200 — JWT Issued</span>
         </span>
-        <button onclick="copyAdminToken()" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-800 text-xs text-slate-700">
+        <button onclick="copyAdminToken()" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-xs text-slate-700">
           <i data-lucide="copy" class="w-3.5 h-3.5"></i>
           <span id="btn-copy-token-text">Copy JWT</span>
         </button>
@@ -3019,7 +3022,7 @@ function renderCustomers(rows) {
     const hasActiveSession = Boolean(c.login_session_id);
     const sessionBadge = hasActiveSession
       ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950/70 border border-emerald-800 text-emerald-300"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>1 Active Dev</span>'
-      : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 border border-slate-200 text-slate-500">0 Active</span>';
+      : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 border border-slate-200 text-slate-600">0 Active</span>';
 
     return `<tr class="hover:bg-slate-50 transition">
       <td class="py-3 px-4 font-mono font-bold text-slate-900">${c.phone_number}</td>
@@ -3028,7 +3031,7 @@ function renderCustomers(rows) {
         <span class="mr-1">${c.otp || '—'}</span>
         <button onclick="refreshOtp('${c.phone_number}', this)" title="Refresh OTP" class="text-indigo-400 hover:text-indigo-300 font-bold ml-1">↻</button>
       </td>
-      <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-700 border border-slate-200">${c.source}</span></td>
+      <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">${c.source}</span></td>
       <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-semibold border ${planClass}">${c.payment_type}</span></td>
       <td class="py-3 px-4 font-mono text-slate-700">${c.referral_code_generated || '—'}</td>
       <td class="py-3 px-4 text-slate-700 font-medium">${formatSeconds(c.time_remaining_seconds)}</td>
@@ -3060,7 +3063,7 @@ function renderCustomers(rows) {
             <i data-lucide="edit-3" class="w-3.5 h-3.5 text-indigo-400"></i>
             <span>Edit</span>
           </button>
-          <button onclick='showDetail(${JSON.stringify(c)})' title="View JSON" class="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium transition">
+          <button onclick='showDetail(${JSON.stringify(c)})' title="View JSON" class="inline-flex items-center gap-1 px-2 py-1 rounded bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-medium transition">
             <i data-lucide="eye" class="w-3.5 h-3.5"></i>
           </button>
         </div>
@@ -3223,7 +3226,7 @@ function renderAttempts(events) {
       <td class="py-3 px-3.5 text-slate-500">${(e.device?.brand || '') + ' ' + (e.device?.model || '') || '—'}</td>
       <td class="py-3 px-3.5">${typeBadge}</td>
       <td class="py-3 px-3.5 text-right">
-        <button onclick='showDetail(${JSON.stringify(e)})' class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs transition">
+        <button onclick='showDetail(${JSON.stringify(e)})' class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs transition">
           <i data-lucide="eye" class="w-3.5 h-3.5"></i>
           <span>View</span>
         </button>
@@ -3383,7 +3386,7 @@ function renderRecharges(rows) {
       <td class="py-3 px-4 font-semibold text-slate-800">₹${(Number(r.amount) || 0).toFixed(2)}</td>
       <td class="py-3 px-4 font-semibold ${deltaColor}">${deltaSign}${delta}s (${deltaSign}${Math.round(delta / 60)}m)</td>
       <td class="py-3 px-4">
-        <span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-500 border border-slate-200">${r.previous_payment_type}</span>
+        <span class="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600 border border-slate-200">${r.previous_payment_type}</span>
         <span class="text-slate-500 mx-1">➔</span>
         <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-semibold">${r.new_payment_type}</span>
       </td>
@@ -3392,7 +3395,7 @@ function renderRecharges(rows) {
       <td class="py-3 px-4 text-slate-500 text-[11px]">${r.created_at ? r.created_at.replace('T', ' ').split('.')[0] : '—'}</td>
       <td class="py-3 px-4 text-slate-500 text-[11px] truncate max-w-xs">${r.notes || '—'}</td>
       <td class="py-3 px-4 text-right">
-        <button onclick='showDetail(${JSON.stringify(r)})' class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs transition">
+        <button onclick='showDetail(${JSON.stringify(r)})' class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs transition">
           <i data-lucide="eye" class="w-3.5 h-3.5"></i>
           <span>View</span>
         </button>
@@ -3446,7 +3449,7 @@ function renderEvents(rows) {
       <td class="py-3 px-4">${typeBadge}</td>
       <td class="py-3 px-4 text-slate-500 text-[11px] font-mono">${e.timestamp ? e.timestamp.replace('T', ' ').split('.')[0] : '—'}</td>
       <td class="py-3 px-4 text-right">
-        <button onclick='showDetail(${JSON.stringify(e)})' class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs transition">
+        <button onclick='showDetail(${JSON.stringify(e)})' class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs transition">
           <i data-lucide="eye" class="w-3.5 h-3.5"></i>
           <span>View</span>
         </button>
@@ -3489,7 +3492,7 @@ function renderSessions(rows) {
     const isActive = Boolean(s.login_session_id);
     const statusBadge = isActive
       ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Active</span>'
-      : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-500 border border-slate-200 font-medium">Terminated</span>';
+      : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600 border border-slate-200 font-medium">Terminated</span>';
 
     const sessionCell = isActive
       ? `<span class="font-mono text-purple-700 text-[11px] truncate max-w-xs block">${s.login_session_id}</span>`
@@ -3629,7 +3632,7 @@ async function openUsageHistoryModal(phone) {
     };
 
     tbody.innerHTML = list.map(h => {
-      const badge = actionColors[h.action] || 'bg-slate-800 text-slate-700 border-slate-200';
+      const badge = actionColors[h.action] || 'bg-slate-100 text-slate-700 border-slate-200';
       const consumedDisplay = h.minutes_consumed > 0
         ? `<span class="text-rose-400 font-bold">-${h.minutes_consumed}m (${h.seconds_consumed}s)</span>`
         : `<span class="text-slate-500">0m</span>`;
@@ -3733,10 +3736,10 @@ function renderAdmins(list) {
   };
 
   tbody.innerHTML = list.map(a => {
-    const roleBadge = roleColors[a.role] || 'bg-slate-800 text-slate-700 border-slate-200';
+    const roleBadge = roleColors[a.role] || 'bg-slate-100 text-slate-700 border-slate-200';
     const statusBadge = a.is_active
       ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950/60 border border-emerald-800 text-emerald-300"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Active</span>'
-      : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 border border-slate-200 text-slate-500">Inactive</span>';
+      : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 border border-slate-200 text-slate-600">Inactive</span>';
 
     const initials = (a.name || 'A').slice(0, 2).toUpperCase();
     const createdStr = a.created_at ? new Date(a.created_at).toLocaleString() : '—';
@@ -3777,7 +3780,7 @@ function renderAdmins(list) {
         </td>
         <td class="py-3 px-4 text-right">
           <div class="flex items-center justify-end gap-1.5">
-            <button onclick="openEditAdminModal('${escapeHtml(a.email)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 text-slate-800 text-xs font-medium border border-slate-200 transition" title="Edit Admin">
+            <button onclick="openEditAdminModal('${escapeHtml(a.email)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 transition" title="Edit Admin">
               <i data-lucide="edit-3" class="w-3 h-3 text-indigo-400"></i>
               <span>Edit</span>
             </button>
