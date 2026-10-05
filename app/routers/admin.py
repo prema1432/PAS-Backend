@@ -1055,7 +1055,7 @@ async def dashboard() -> HTMLResponse:
 
 
 DASHBOARD_HTML = """<!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -1065,19 +1065,20 @@ DASHBOARD_HTML = """<!DOCTYPE html>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = {
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         dark: {
-          950: '#090d16',
-          900: '#0f172a',
-          850: '#141e33',
-          800: '#1e293b',
-          700: '#334155',
-          600: '#475569'
+          950: '#f8fafc',
+          900: '#ffffff',
+          850: '#f1f5f9',
+          800: '#e2e8f0',
+          700: '#cbd5e1',
+          600: '#94a3b8'
         },
         brand: {
+          50: '#eef2ff',
+          100: '#e0e7ff',
           500: '#6366f1',
           600: '#4f46e5',
           700: '#4338ca'
@@ -1095,23 +1096,23 @@ tailwind.config = {
 <script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
-/* Custom Scrollbars and Glass effects */
+/* Custom Scrollbars and Glass effects - Crisp Light Theme */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #0f172a; }
-::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #475569; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 .glass-panel {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(51, 65, 85, 0.6);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
 }
 
 .modal-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(9, 13, 22, 0.75);
+  background: rgba(15, 23, 42, 0.45);
   backdrop-filter: blur(4px);
   z-index: 50;
   align-items: center;
@@ -1120,121 +1121,121 @@ tailwind.config = {
 .modal-overlay.open { display: flex; }
 
 .nav-link.active {
-  background: #312e81;
-  color: #c7d2fe;
-}
-</style>
+  background: #eef2ff !important;
+  color: #4f46e5 !important;
+  font-weight: 600;
+}</style>
 </head>
-<body class="bg-dark-950 text-slate-100 min-h-screen flex antialiased">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex antialiased">
 
 <!-- ── ADMIN AUTH GATEWAY (LOCK SCREEN ON LOGOUT) ── -->
-<div id="admin-auth-gate" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-dark-950/95 backdrop-blur-md p-4">
-  <div class="glass-panel w-full max-w-md rounded-2xl border border-slate-700 p-8 shadow-2xl relative text-center">
+<div id="admin-auth-gate" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-md p-4">
+  <div class="bg-white border border-slate-200 shadow-2xl w-full max-w-md rounded-2xl p-8 relative text-center">
     <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-black text-white text-2xl shadow-xl shadow-indigo-500/25 mb-4">
       P
     </div>
-    <h2 class="text-xl font-bold text-white tracking-wide">PAS Admin Portal</h2>
-    <p class="text-xs text-slate-400 mt-1 mb-6">Enter administrator credentials to unlock the management dashboard</p>
+    <h2 class="text-xl font-bold text-slate-900 tracking-wide">PAS Admin Portal</h2>
+    <p class="text-xs text-slate-500 mt-1 mb-6">Enter administrator credentials to unlock the management dashboard</p>
 
     <form onsubmit="performAdminGateLogin(event)" class="text-left space-y-4">
       <div>
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Admin Email</label>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Admin Email</label>
         <div class="relative">
-          <i data-lucide="mail" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-          <input type="email" id="gate-admin-email" value="admin@pas.com" required placeholder="admin@pas.com" class="w-full bg-dark-900 border border-slate-700 rounded-lg pl-9 pr-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"/>
+          <i data-lucide="mail" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input type="email" id="gate-admin-email" value="admin@pas.com" required placeholder="admin@pas.com" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white"/>
         </div>
       </div>
 
       <div>
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Password</label>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
         <div class="relative">
-          <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-          <input type="password" id="gate-admin-password" value="admin123" required placeholder="••••••••" class="w-full bg-dark-900 border border-slate-700 rounded-lg pl-9 pr-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"/>
+          <i data-lucide="lock" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input type="password" id="gate-admin-password" value="admin123" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white"/>
         </div>
       </div>
 
-      <div id="gate-login-error" class="hidden text-xs text-red-400 bg-red-950/40 border border-red-900/60 rounded-lg p-2.5 text-center"></div>
+      <div id="gate-login-error" class="hidden text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg p-2.5 text-center"></div>
 
       <button type="submit" id="btn-gate-login" class="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition">
         <i data-lucide="log-in" class="w-4 h-4"></i>
         <span>Sign In to Dashboard</span>
       </button>
 
-      <div class="pt-2 text-center text-[11px] text-slate-400">
-        Default Superadmin: <code class="text-indigo-300 font-mono">admin@pas.com</code> / <code class="text-indigo-300 font-mono">admin123</code>
+      <div class="pt-2 text-center text-[11px] text-slate-500">
+        Default Superadmin: <code class="text-indigo-600 font-mono">admin@pas.com</code> / <code class="text-indigo-600 font-mono">admin123</code>
       </div>
     </form>
   </div>
 </div>
 
 <!-- ── SIDEBAR ── -->
-<aside class="w-64 min-h-screen bg-dark-900 border-r border-slate-800 flex flex-col fixed top-0 bottom-0 left-0 z-20">
+<aside class="w-64 min-h-screen bg-white border-r border-slate-200 flex flex-col fixed top-0 bottom-0 left-0 z-20 shadow-sm">
   <!-- Brand -->
-  <div class="flex items-center gap-3 px-5 py-5 border-b border-slate-800">
+  <div class="flex items-center gap-3 px-5 py-5 border-b border-slate-200">
     <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-black text-white text-base shadow-md shadow-indigo-500/20">
       P
     </div>
     <div>
-      <h1 class="text-sm font-bold text-white tracking-wide">PAS Admin</h1>
-      <p class="text-[11px] text-slate-400 font-medium">Unified Router Hub</p>
+      <h1 class="text-sm font-bold text-slate-900 tracking-wide">PAS Admin</h1>
+      <p class="text-[11px] text-slate-500 font-medium">Unified Router Hub</p>
     </div>
   </div>
 
   <!-- Navigation with Lucide Icons -->
   <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-    <div class="px-3 pb-1 text-[10px] font-bold text-slate-300 uppercase tracking-wider">Management</div>
+    <div class="px-3 pb-1 text-[10px] font-bold text-slate-700 uppercase tracking-wider">Management</div>
     
-    <button class="nav-link active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition" onclick="showPage('overview', this)">
+    <button class="nav-link active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition" onclick="showPage('overview', this)">
       <i data-lucide="layout-dashboard" class="w-4 h-4 text-indigo-400"></i>
       <span>Overview</span>
     </button>
     
-    <button class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition" onclick="showPage('customers', this)">
-      <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
+    <button class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition" onclick="showPage('customers', this)">
+      <i data-lucide="users" class="w-4 h-4 text-emerald-600"></i>
       <span>Customers</span>
     </button>
     
-    <button class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition" onclick="showPage('recharges', this)">
+    <button class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition" onclick="showPage('recharges', this)">
       <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
       <span>Recharges</span>
     </button>
     
-    <button class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition" onclick="showPage('events', this)">
-      <i data-lucide="activity" class="w-4 h-4 text-cyan-400"></i>
+    <button class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition" onclick="showPage('events', this)">
+      <i data-lucide="activity" class="w-4 h-4 text-cyan-600"></i>
       <span>Login Events</span>
     </button>
 
-    <button class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition" onclick="showPage('sessions', this)">
+    <button class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition" onclick="showPage('sessions', this)">
       <i data-lucide="shield-check" class="w-4 h-4 text-purple-400"></i>
       <span>Login Sessions</span>
     </button>
 
-    <button class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition" onclick="showPage('admins', this)">
-      <i data-lucide="shield" class="w-4 h-4 text-sky-400"></i>
+    <button class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition" onclick="showPage('admins', this)">
+      <i data-lucide="shield" class="w-4 h-4 text-sky-600"></i>
       <span>Admins</span>
     </button>
 
-    <button class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition" onclick="showPage('store', this)">
+    <button class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition" onclick="showPage('store', this)">
       <i data-lucide="shopping-bag" class="w-4 h-4 text-rose-400"></i>
       <span>Store & Config</span>
     </button>
 
-    <div class="pt-4 px-3 pb-1 text-[10px] font-bold text-slate-300 uppercase tracking-wider">API & Docs</div>
-    <a href="/docs" target="_blank" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
+    <div class="pt-4 px-3 pb-1 text-[10px] font-bold text-slate-700 uppercase tracking-wider">API & Docs</div>
+    <a href="/docs" target="_blank" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">
       <i data-lucide="file-code" class="w-4 h-4 text-indigo-400"></i>
       <span>Swagger UI</span>
-      <i data-lucide="external-link" class="w-3 h-3 ml-auto text-slate-300"></i>
+      <i data-lucide="external-link" class="w-3 h-3 ml-auto text-slate-700"></i>
     </a>
-    <a href="/redoc" target="_blank" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
+    <a href="/redoc" target="_blank" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">
       <i data-lucide="book-open" class="w-4 h-4 text-indigo-400"></i>
       <span>ReDoc</span>
-      <i data-lucide="external-link" class="w-3 h-3 ml-auto text-slate-300"></i>
+      <i data-lucide="external-link" class="w-3 h-3 ml-auto text-slate-700"></i>
     </a>
   </nav>
 
   <!-- Sidebar Footer -->
-  <div class="p-3 border-t border-slate-800 flex flex-col gap-1">
-    <div class="flex items-center gap-2 px-3 py-2 text-[11px] text-slate-400">
+  <div class="p-3 border-t border-slate-200 flex flex-col gap-1">
+    <div class="flex items-center gap-2 px-3 py-2 text-[11px] text-slate-500">
       <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
       <span>API Status: <strong>Online</strong></span>
     </div>
@@ -1242,47 +1243,47 @@ tailwind.config = {
 </aside>
 
 <!-- ── MAIN CONTENT ── -->
-<div class="ml-64 flex-1 flex flex-col min-h-screen bg-dark-950">
+<div class="ml-64 flex-1 flex flex-col min-h-screen bg-slate-50">
 
   <!-- Top bar -->
-  <header class="h-16 px-8 border-b border-slate-800 bg-dark-900/60 backdrop-blur-md flex items-center justify-between sticky top-0 z-10">
+  <header class="h-16 px-8 border-b border-slate-200 bg-white/80 backdrop-blur-md flex items-center justify-between sticky top-0 z-10">
     <div class="flex items-center gap-3">
       <div id="page-icon-wrapper" class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
         <i data-lucide="layout-dashboard" class="w-4 h-4" id="page-icon"></i>
       </div>
       <div>
-        <h2 id="page-title" class="text-sm font-bold text-white tracking-wide">Overview</h2>
-        <p id="page-sub" class="text-[11px] text-slate-400">PAS Authentication & Subscriptions Dashboard</p>
+        <h2 id="page-title" class="text-sm font-bold text-slate-900 tracking-wide">Overview</h2>
+        <p id="page-sub" class="text-[11px] text-slate-500">PAS Authentication & Subscriptions Dashboard</p>
       </div>
     </div>
     <div class="flex items-center gap-3">
       <!-- Universal Export button on top bar -->
       <!-- Admin Login Token Tester -->
-      <button onclick="openAdminLoginModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-sky-800/80 bg-sky-950/40 hover:bg-sky-900/50 text-sky-300 text-xs font-medium transition shadow-sm" title="Admin Login & JWT Token Generator">
-        <i data-lucide="key" class="w-3.5 h-3.5 text-sky-400"></i>
+      <button onclick="openAdminLoginModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-sky-200 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-medium transition shadow-sm" title="Admin Login & JWT Token Generator">
+        <i data-lucide="key" class="w-3.5 h-3.5 text-sky-600"></i>
         <span>Admin Login (JWT)</span>
       </button>
 
-      <button onclick="promptExportCurrentPage()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-700/80 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-medium transition shadow-sm" title="Export Current Page Data">
+      <button onclick="promptExportCurrentPage()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium transition shadow-sm" title="Export Current Page Data">
         <i data-lucide="download" class="w-3.5 h-3.5 text-indigo-400"></i>
         <span>Export Page</span>
       </button>
 
-      <button onclick="refreshCurrentPage()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-medium transition shadow-sm">
-        <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-400"></i>
+      <button onclick="refreshCurrentPage()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium transition shadow-sm">
+        <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-500"></i>
         <span>Refresh</span>
       </button>
 
       <!-- Admin Badge -->
-      <div id="topbar-admin-badge" class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-800/60 border border-slate-700/80 text-xs text-slate-300">
+      <div id="topbar-admin-badge" class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs text-slate-700">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
         <span id="topbar-admin-name" class="font-semibold text-white">Admin</span>
-        <span id="topbar-admin-role" class="text-[10px] px-1.5 py-0.2 rounded bg-indigo-950 text-indigo-300 border border-indigo-800 font-mono">superadmin</span>
+        <span id="topbar-admin-role" class="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700 border border-indigo-200 font-mono">superadmin</span>
       </div>
 
       <!-- Admin Logout button -->
-      <button onclick="adminLogout()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-800/80 bg-red-950/60 hover:bg-red-900/60 text-red-300 text-xs font-semibold transition shadow-sm" title="Sign out of Admin Session">
-        <i data-lucide="log-out" class="w-3.5 h-3.5 text-red-400"></i>
+      <button onclick="adminLogout()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold transition shadow-sm" title="Sign out of Admin Session">
+        <i data-lucide="log-out" class="w-3.5 h-3.5 text-rose-600"></i>
         <span>Logout</span>
       </button>
     </div>
@@ -1292,42 +1293,42 @@ tailwind.config = {
   <main id="page-overview" class="page-view p-8 flex-1">
     <!-- Stat Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <div class="glass-panel rounded-xl p-5 border border-slate-800 flex items-center justify-between">
+      <div class="glass-panel rounded-xl p-5 border border-slate-200 flex items-center justify-between">
         <div>
-          <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Customers</p>
-          <h3 class="text-2xl font-extrabold text-white mt-1" id="ov-customers">—</h3>
+          <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Customers</p>
+          <h3 class="text-2xl font-extrabold text-slate-900 mt-1" id="ov-customers">—</h3>
         </div>
         <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
           <i data-lucide="users" class="w-6 h-6"></i>
         </div>
       </div>
 
-      <div class="glass-panel rounded-xl p-5 border border-slate-800 flex items-center justify-between">
+      <div class="glass-panel rounded-xl p-5 border border-slate-200 flex items-center justify-between">
         <div>
-          <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Login Attempts</p>
-          <h3 class="text-2xl font-extrabold text-white mt-1" id="ov-events">—</h3>
+          <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Login Attempts</p>
+          <h3 class="text-2xl font-extrabold text-slate-900 mt-1" id="ov-events">—</h3>
         </div>
-        <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+        <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-600">
           <i data-lucide="activity" class="w-6 h-6"></i>
         </div>
       </div>
 
-      <div class="glass-panel rounded-xl p-5 border border-slate-800 flex items-center justify-between">
+      <div class="glass-panel rounded-xl p-5 border border-slate-200 flex items-center justify-between">
         <div>
-          <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Recharges</p>
-          <h3 class="text-2xl font-extrabold text-white mt-1" id="ov-recharges">—</h3>
+          <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Recharges</p>
+          <h3 class="text-2xl font-extrabold text-slate-900 mt-1" id="ov-recharges">—</h3>
         </div>
         <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
           <i data-lucide="zap" class="w-6 h-6"></i>
         </div>
       </div>
 
-      <div class="glass-panel rounded-xl p-5 border border-slate-800 flex items-center justify-between">
+      <div class="glass-panel rounded-xl p-5 border border-slate-200 flex items-center justify-between">
         <div>
-          <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Revenue Collected</p>
-          <h3 class="text-2xl font-extrabold text-white mt-1" id="ov-revenue">—</h3>
+          <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Revenue Collected</p>
+          <h3 class="text-2xl font-extrabold text-slate-900 mt-1" id="ov-revenue">—</h3>
         </div>
-        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600">
           <i data-lucide="wallet" class="w-6 h-6"></i>
         </div>
       </div>
@@ -1335,28 +1336,28 @@ tailwind.config = {
 
     <!-- Info Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="glass-panel rounded-xl p-6 border border-slate-800">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2 mb-4">
+      <div class="glass-panel rounded-xl p-6 border border-slate-200">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-4">
           <i data-lucide="database" class="w-4 h-4 text-indigo-400"></i>
           MongoDB Collections Status
         </h4>
-        <div class="divide-y divide-slate-800 text-xs">
-          <div class="flex justify-between py-2.5"><span class="text-slate-400">customers</span><span class="font-semibold text-slate-200" id="ov-c2">—</span></div>
-          <div class="flex justify-between py-2.5"><span class="text-slate-400">login_events</span><span class="font-semibold text-slate-200" id="ov-e2">—</span></div>
-          <div class="flex justify-between py-2.5"><span class="text-slate-400">recharges</span><span class="font-semibold text-slate-200" id="ov-r2">—</span></div>
-          <div class="flex justify-between py-2.5"><span class="text-slate-400">admins</span><span class="font-semibold text-sky-400" id="ov-a2">—</span></div>
+        <div class="divide-y divide-slate-100 text-xs">
+          <div class="flex justify-between py-2.5"><span class="text-slate-500">customers</span><span class="font-semibold text-slate-800" id="ov-c2">—</span></div>
+          <div class="flex justify-between py-2.5"><span class="text-slate-500">login_events</span><span class="font-semibold text-slate-800" id="ov-e2">—</span></div>
+          <div class="flex justify-between py-2.5"><span class="text-slate-500">recharges</span><span class="font-semibold text-slate-800" id="ov-r2">—</span></div>
+          <div class="flex justify-between py-2.5"><span class="text-slate-500">admins</span><span class="font-semibold text-sky-600" id="ov-a2">—</span></div>
         </div>
       </div>
 
-      <div class="glass-panel rounded-xl p-6 border border-slate-800">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2 mb-4">
-          <i data-lucide="award" class="w-4 h-4 text-emerald-400"></i>
+      <div class="glass-panel rounded-xl p-6 border border-slate-200">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-4">
+          <i data-lucide="award" class="w-4 h-4 text-emerald-600"></i>
           Subscription & Plans
         </h4>
-        <div class="divide-y divide-slate-800 text-xs">
-          <div class="flex justify-between py-2.5"><span class="text-slate-400">Free Accounts</span><span class="font-semibold text-sky-400" id="ov-free">—</span></div>
-          <div class="flex justify-between py-2.5"><span class="text-slate-400">Paid Accounts</span><span class="font-semibold text-emerald-400" id="ov-paid">—</span></div>
-          <div class="flex justify-between py-2.5"><span class="text-slate-400">Default Trial Duration</span><span class="text-slate-300 font-medium">30 minutes</span></div>
+        <div class="divide-y divide-slate-100 text-xs">
+          <div class="flex justify-between py-2.5"><span class="text-slate-500">Free Accounts</span><span class="font-semibold text-sky-600" id="ov-free">—</span></div>
+          <div class="flex justify-between py-2.5"><span class="text-slate-500">Paid Accounts</span><span class="font-semibold text-emerald-600" id="ov-paid">—</span></div>
+          <div class="flex justify-between py-2.5"><span class="text-slate-500">Default Trial Duration</span><span class="text-slate-700 font-medium">30 minutes</span></div>
         </div>
       </div>
     </div>
@@ -1368,26 +1369,26 @@ tailwind.config = {
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex items-center gap-3 flex-wrap">
         <div class="relative">
-          <i data-lucide="search" class="w-4 h-4 text-slate-300 absolute left-3 top-1/2 -translate-y-1/2"></i>
-          <input id="c-search" type="text" placeholder="Search phone or referral…" oninput="cSkip=0; loadCustomers()" class="w-64 bg-dark-900 border border-slate-700/80 rounded-lg pl-9 pr-3.5 py-2 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition"/>
+          <i data-lucide="search" class="w-4 h-4 text-slate-700 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input id="c-search" type="text" placeholder="Search phone or referral…" oninput="cSkip=0; loadCustomers()" class="w-64 bg-white border border-slate-200 rounded-lg pl-9 pr-3.5 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition"/>
         </div>
         
         <!-- Filter: Plan Type -->
-        <select id="c-filter-plan" onchange="cSkip=0; loadCustomers()" class="bg-dark-900 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 transition">
+        <select id="c-filter-plan" onchange="cSkip=0; loadCustomers()" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-indigo-500 transition">
           <option value="">All Plans</option>
           <option value="free">Free</option>
           <option value="paid">Paid</option>
         </select>
 
         <!-- Filter: Source -->
-        <select id="c-filter-source" onchange="cSkip=0; loadCustomers()" class="bg-dark-900 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 transition">
+        <select id="c-filter-source" onchange="cSkip=0; loadCustomers()" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-indigo-500 transition">
           <option value="">All Sources</option>
           <option value="admin">admin</option>
           <option value="self">self</option>
         </select>
 
-        <button onclick="loadCustomers()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">
-          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-400"></i>
+        <button onclick="loadCustomers()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium transition">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-500"></i>
           <span>Reload</span>
         </button>
 
@@ -1408,11 +1409,11 @@ tailwind.config = {
     </div>
 
     <!-- Table Wrap -->
-    <div class="glass-panel rounded-xl border border-slate-800 overflow-hidden shadow-sm">
+    <div class="glass-panel rounded-xl border border-slate-200 overflow-hidden shadow-sm">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
-            <tr class="bg-dark-900/90 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
+            <tr class="bg-white/90 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
               <th class="py-3.5 px-4">Phone Number</th>
               <th class="py-3.5 px-4">Active Session</th>
               <th class="py-3.5 px-4">OTP</th>
@@ -1425,19 +1426,19 @@ tailwind.config = {
               <th class="py-3.5 px-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody id="c-tbody" class="divide-y divide-slate-800/60">
-            <tr><td colspan="9" class="py-8 text-center text-slate-300 font-medium">Loading customers…</td></tr>
+          <tbody id="c-tbody" class="divide-y divide-slate-100/60">
+            <tr><td colspan="9" class="py-8 text-center text-slate-700 font-medium">Loading customers…</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
     <!-- Pagination -->
-    <div class="flex items-center justify-between mt-4 text-xs text-slate-400">
+    <div class="flex items-center justify-between mt-4 text-xs text-slate-500">
       <span id="c-page-info">Showing records…</span>
       <div class="flex items-center gap-2">
-        <button id="c-prev" onclick="customerPage(-1)" class="px-3 py-1.5 rounded border border-slate-700 bg-slate-800/60 hover:bg-slate-700 disabled:opacity-40 transition">Previous</button>
-        <button id="c-next" onclick="customerPage(1)" class="px-3 py-1.5 rounded border border-slate-700 bg-slate-800/60 hover:bg-slate-700 disabled:opacity-40 transition">Next</button>
+        <button id="c-prev" onclick="customerPage(-1)" class="px-3 py-1.5 rounded border border-slate-200 bg-slate-100 hover:bg-slate-100 disabled:opacity-40 transition">Previous</button>
+        <button id="c-next" onclick="customerPage(1)" class="px-3 py-1.5 rounded border border-slate-200 bg-slate-100 hover:bg-slate-100 disabled:opacity-40 transition">Next</button>
       </div>
     </div>
   </main>
@@ -1448,12 +1449,12 @@ tailwind.config = {
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex items-center gap-3 flex-wrap">
         <div class="relative">
-          <i data-lucide="search" class="w-4 h-4 text-slate-300 absolute left-3 top-1/2 -translate-y-1/2"></i>
-          <input id="r-search" type="text" placeholder="Search phone number…" oninput="rSkip=0; loadRecharges()" class="w-64 bg-dark-900 border border-slate-700/80 rounded-lg pl-9 pr-3.5 py-2 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition"/>
+          <i data-lucide="search" class="w-4 h-4 text-slate-700 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input id="r-search" type="text" placeholder="Search phone number…" oninput="rSkip=0; loadRecharges()" class="w-64 bg-white border border-slate-200 rounded-lg pl-9 pr-3.5 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition"/>
         </div>
 
         <!-- Filter: Status -->
-        <select id="r-filter-status" onchange="rSkip=0; loadRecharges()" class="bg-dark-900 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 transition">
+        <select id="r-filter-status" onchange="rSkip=0; loadRecharges()" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-indigo-500 transition">
           <option value="">All Statuses</option>
           <option value="completed">Completed</option>
           <option value="manual">Manual</option>
@@ -1462,20 +1463,20 @@ tailwind.config = {
         </select>
 
         <!-- Filter: Source -->
-        <select id="r-filter-source" onchange="rSkip=0; loadRecharges()" class="bg-dark-900 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 transition">
+        <select id="r-filter-source" onchange="rSkip=0; loadRecharges()" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-indigo-500 transition">
           <option value="">All Sources</option>
           <option value="manual">manual</option>
           <option value="admin">admin</option>
           <option value="gateway">gateway</option>
         </select>
 
-        <button onclick="loadRecharges()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">
-          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-400"></i>
+        <button onclick="loadRecharges()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium transition">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-500"></i>
           <span>Reload</span>
         </button>
 
         <!-- Export button -->
-        <button onclick="openExportModal('recharges')" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-amber-700/70 bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 text-xs font-medium transition" title="Export Recharges to XLSX or JSON">
+        <button onclick="openExportModal('recharges')" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-amber-700/70 bg-amber-900/30 hover:bg-amber-900/50 text-amber-700 text-xs font-medium transition" title="Export Recharges to XLSX or JSON">
           <i data-lucide="download" class="w-3.5 h-3.5 text-amber-400"></i>
           <span>Export</span>
         </button>
@@ -1483,11 +1484,11 @@ tailwind.config = {
     </div>
 
     <!-- Table -->
-    <div class="glass-panel rounded-xl border border-slate-800 overflow-hidden shadow-sm">
+    <div class="glass-panel rounded-xl border border-slate-200 overflow-hidden shadow-sm">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
-            <tr class="bg-dark-900/90 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
+            <tr class="bg-white/90 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
               <th class="py-3.5 px-4">Phone Number</th>
               <th class="py-3.5 px-4">Amount</th>
               <th class="py-3.5 px-4">Time Adjustment</th>
@@ -1499,19 +1500,19 @@ tailwind.config = {
               <th class="py-3.5 px-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody id="r-tbody" class="divide-y divide-slate-800/60">
-            <tr><td colspan="9" class="py-8 text-center text-slate-300 font-medium">Loading recharges…</td></tr>
+          <tbody id="r-tbody" class="divide-y divide-slate-100/60">
+            <tr><td colspan="9" class="py-8 text-center text-slate-700 font-medium">Loading recharges…</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
     <!-- Pagination -->
-    <div class="flex items-center justify-between mt-4 text-xs text-slate-400">
+    <div class="flex items-center justify-between mt-4 text-xs text-slate-500">
       <span id="r-page-info">Showing records…</span>
       <div class="flex items-center gap-2">
-        <button id="r-prev" onclick="rechargePage(-1)" class="px-3 py-1.5 rounded border border-slate-700 bg-slate-800/60 hover:bg-slate-700 disabled:opacity-40 transition">Previous</button>
-        <button id="r-next" onclick="rechargePage(1)" class="px-3 py-1.5 rounded border border-slate-700 bg-slate-800/60 hover:bg-slate-700 disabled:opacity-40 transition">Next</button>
+        <button id="r-prev" onclick="rechargePage(-1)" class="px-3 py-1.5 rounded border border-slate-200 bg-slate-100 hover:bg-slate-100 disabled:opacity-40 transition">Previous</button>
+        <button id="r-next" onclick="rechargePage(1)" class="px-3 py-1.5 rounded border border-slate-200 bg-slate-100 hover:bg-slate-100 disabled:opacity-40 transition">Next</button>
       </div>
     </div>
   </main>
@@ -1522,12 +1523,12 @@ tailwind.config = {
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex items-center gap-3 flex-wrap">
         <div class="relative">
-          <i data-lucide="search" class="w-4 h-4 text-slate-300 absolute left-3 top-1/2 -translate-y-1/2"></i>
-          <input id="e-search" type="text" placeholder="Search phone or IP address…" oninput="eSkip=0; loadEvents()" class="w-64 bg-dark-900 border border-slate-700/80 rounded-lg pl-9 pr-3.5 py-2 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition"/>
+          <i data-lucide="search" class="w-4 h-4 text-slate-700 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input id="e-search" type="text" placeholder="Search phone or IP address…" oninput="eSkip=0; loadEvents()" class="w-64 bg-white border border-slate-200 rounded-lg pl-9 pr-3.5 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition"/>
         </div>
 
         <!-- Filter: Device Type -->
-        <select id="e-filter-device" onchange="eSkip=0; loadEvents()" class="bg-dark-900 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 transition">
+        <select id="e-filter-device" onchange="eSkip=0; loadEvents()" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-indigo-500 transition">
           <option value="">All Devices</option>
           <option value="pc">PC / Desktop</option>
           <option value="mobile">Mobile</option>
@@ -1535,25 +1536,25 @@ tailwind.config = {
           <option value="bot">Bot / Crawler</option>
         </select>
 
-        <button onclick="loadEvents()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">
-          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-400"></i>
+        <button onclick="loadEvents()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium transition">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-500"></i>
           <span>Reload</span>
         </button>
 
         <!-- Export button -->
         <button onclick="openExportModal('events')" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-cyan-700/70 bg-cyan-900/30 hover:bg-cyan-900/50 text-cyan-300 text-xs font-medium transition" title="Export Login Events to XLSX or JSON">
-          <i data-lucide="download" class="w-3.5 h-3.5 text-cyan-400"></i>
+          <i data-lucide="download" class="w-3.5 h-3.5 text-cyan-600"></i>
           <span>Export</span>
         </button>
       </div>
     </div>
 
     <!-- Table -->
-    <div class="glass-panel rounded-xl border border-slate-800 overflow-hidden shadow-sm">
+    <div class="glass-panel rounded-xl border border-slate-200 overflow-hidden shadow-sm">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
-            <tr class="bg-dark-900/90 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
+            <tr class="bg-white/90 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
               <th class="py-3.5 px-4">Phone Number</th>
               <th class="py-3.5 px-4">IP Address</th>
               <th class="py-3.5 px-4">Location</th>
@@ -1564,19 +1565,19 @@ tailwind.config = {
               <th class="py-3.5 px-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody id="e-tbody" class="divide-y divide-slate-800/60">
-            <tr><td colspan="8" class="py-8 text-center text-slate-300 font-medium">Loading events…</td></tr>
+          <tbody id="e-tbody" class="divide-y divide-slate-100/60">
+            <tr><td colspan="8" class="py-8 text-center text-slate-700 font-medium">Loading events…</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
     <!-- Pagination -->
-    <div class="flex items-center justify-between mt-4 text-xs text-slate-400">
+    <div class="flex items-center justify-between mt-4 text-xs text-slate-500">
       <span id="e-page-info">Showing records…</span>
       <div class="flex items-center gap-2">
-        <button id="e-prev" onclick="eventPage(-1)" class="px-3 py-1.5 rounded border border-slate-700 bg-slate-800/60 hover:bg-slate-700 disabled:opacity-40 transition">Previous</button>
-        <button id="e-next" onclick="eventPage(1)" class="px-3 py-1.5 rounded border border-slate-700 bg-slate-800/60 hover:bg-slate-700 disabled:opacity-40 transition">Next</button>
+        <button id="e-prev" onclick="eventPage(-1)" class="px-3 py-1.5 rounded border border-slate-200 bg-slate-100 hover:bg-slate-100 disabled:opacity-40 transition">Previous</button>
+        <button id="e-next" onclick="eventPage(1)" class="px-3 py-1.5 rounded border border-slate-200 bg-slate-100 hover:bg-slate-100 disabled:opacity-40 transition">Next</button>
       </div>
     </div>
   </main>
@@ -1587,30 +1588,30 @@ tailwind.config = {
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex items-center gap-3 flex-wrap">
         <div class="relative">
-          <i data-lucide="search" class="w-4 h-4 text-slate-300 absolute left-3 top-1/2 -translate-y-1/2"></i>
-          <input id="s-search" type="text" placeholder="Search phone or session ID…" oninput="sSkip=0; loadSessions()" class="w-64 bg-dark-900 border border-slate-700/80 rounded-lg pl-9 pr-3.5 py-2 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition"/>
+          <i data-lucide="search" class="w-4 h-4 text-slate-700 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input id="s-search" type="text" placeholder="Search phone or session ID…" oninput="sSkip=0; loadSessions()" class="w-64 bg-white border border-slate-200 rounded-lg pl-9 pr-3.5 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition"/>
         </div>
 
         <!-- Filter: Session Status -->
-        <select id="s-filter-status" onchange="sSkip=0; loadSessions()" class="bg-dark-900 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 transition">
+        <select id="s-filter-status" onchange="sSkip=0; loadSessions()" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-indigo-500 transition">
           <option value="all">All Sessions</option>
           <option value="active">Active Sessions Only</option>
           <option value="terminated">Terminated / Logged Out</option>
         </select>
 
-        <button onclick="loadSessions()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">
-          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-400"></i>
+        <button onclick="loadSessions()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium transition">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-500"></i>
           <span>Reload</span>
         </button>
       </div>
     </div>
 
     <!-- Table -->
-    <div class="glass-panel rounded-xl border border-slate-800 overflow-hidden shadow-sm">
+    <div class="glass-panel rounded-xl border border-slate-200 overflow-hidden shadow-sm">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
-            <tr class="bg-dark-900/90 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
+            <tr class="bg-white/90 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
               <th class="py-3.5 px-4">Customer Phone</th>
               <th class="py-3.5 px-4">Active Session ID</th>
               <th class="py-3.5 px-4">Plan</th>
@@ -1620,19 +1621,19 @@ tailwind.config = {
               <th class="py-3.5 px-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody id="s-tbody" class="divide-y divide-slate-800/60">
-            <tr><td colspan="7" class="py-8 text-center text-slate-300 font-medium">Loading sessions…</td></tr>
+          <tbody id="s-tbody" class="divide-y divide-slate-100/60">
+            <tr><td colspan="7" class="py-8 text-center text-slate-700 font-medium">Loading sessions…</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
     <!-- Pagination -->
-    <div class="flex items-center justify-between mt-4 text-xs text-slate-400">
+    <div class="flex items-center justify-between mt-4 text-xs text-slate-500">
       <span id="s-page-info">Showing records…</span>
       <div class="flex items-center gap-2">
-        <button id="s-prev" onclick="sessionPage(-1)" class="px-3 py-1.5 rounded border border-slate-700 bg-slate-800/60 hover:bg-slate-700 disabled:opacity-40 transition">Previous</button>
-        <button id="s-next" onclick="sessionPage(1)" class="px-3 py-1.5 rounded border border-slate-700 bg-slate-800/60 hover:bg-slate-700 disabled:opacity-40 transition">Next</button>
+        <button id="s-prev" onclick="sessionPage(-1)" class="px-3 py-1.5 rounded border border-slate-200 bg-slate-100 hover:bg-slate-100 disabled:opacity-40 transition">Previous</button>
+        <button id="s-next" onclick="sessionPage(1)" class="px-3 py-1.5 rounded border border-slate-200 bg-slate-100 hover:bg-slate-100 disabled:opacity-40 transition">Next</button>
       </div>
     </div>
   </main>
@@ -1643,12 +1644,12 @@ tailwind.config = {
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex items-center gap-3 flex-wrap">
         <div class="relative">
-          <i data-lucide="search" class="w-4 h-4 text-slate-300 absolute left-3 top-1/2 -translate-y-1/2"></i>
-          <input id="a-search" type="text" placeholder="Search name or email…" oninput="aSkip=0; loadAdmins()" class="w-64 bg-dark-900 border border-slate-700/80 rounded-lg pl-9 pr-3.5 py-2 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-sky-500 transition"/>
+          <i data-lucide="search" class="w-4 h-4 text-slate-700 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input id="a-search" type="text" placeholder="Search name or email…" oninput="aSkip=0; loadAdmins()" class="w-64 bg-white border border-slate-200 rounded-lg pl-9 pr-3.5 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 transition"/>
         </div>
 
         <!-- Filter: Role -->
-        <select id="a-filter-role" onchange="aSkip=0; loadAdmins()" class="bg-dark-900 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-sky-500 transition">
+        <select id="a-filter-role" onchange="aSkip=0; loadAdmins()" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-sky-500 transition">
           <option value="">All Roles</option>
           <option value="superadmin">superadmin</option>
           <option value="admin">admin</option>
@@ -1656,20 +1657,20 @@ tailwind.config = {
         </select>
 
         <!-- Filter: Status -->
-        <select id="a-filter-status" onchange="aSkip=0; loadAdmins()" class="bg-dark-900 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-sky-500 transition">
+        <select id="a-filter-status" onchange="aSkip=0; loadAdmins()" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-sky-500 transition">
           <option value="">All Statuses</option>
           <option value="true">Active</option>
           <option value="false">Inactive</option>
         </select>
 
-        <button onclick="loadAdmins()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">
-          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-400"></i>
+        <button onclick="loadAdmins()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium transition">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-500"></i>
           <span>Reload</span>
         </button>
 
         <!-- Export button -->
         <button onclick="openExportModal('admins')" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-sky-700/70 bg-sky-900/30 hover:bg-sky-900/50 text-sky-300 text-xs font-medium transition" title="Export Admins to XLSX or JSON">
-          <i data-lucide="download" class="w-3.5 h-3.5 text-sky-400"></i>
+          <i data-lucide="download" class="w-3.5 h-3.5 text-sky-600"></i>
           <span>Export</span>
         </button>
       </div>
@@ -1690,11 +1691,11 @@ tailwind.config = {
     </div>
 
     <!-- Table Wrap -->
-    <div class="glass-panel rounded-xl border border-slate-800 overflow-hidden shadow-sm">
+    <div class="glass-panel rounded-xl border border-slate-200 overflow-hidden shadow-sm">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
-            <tr class="bg-dark-900/90 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
+            <tr class="bg-white/90 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
               <th class="py-3.5 px-4">Admin</th>
               <th class="py-3.5 px-4">Role</th>
               <th class="py-3.5 px-4">Status</th>
@@ -1704,19 +1705,19 @@ tailwind.config = {
               <th class="py-3.5 px-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody id="a-tbody" class="divide-y divide-slate-800/60">
-            <tr><td colspan="7" class="py-8 text-center text-slate-300 font-medium">Loading admin users…</td></tr>
+          <tbody id="a-tbody" class="divide-y divide-slate-100/60">
+            <tr><td colspan="7" class="py-8 text-center text-slate-700 font-medium">Loading admin users…</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
     <!-- Pagination -->
-    <div class="flex items-center justify-between mt-4 text-xs text-slate-400">
+    <div class="flex items-center justify-between mt-4 text-xs text-slate-500">
       <span id="a-page-info">Showing records…</span>
       <div class="flex items-center gap-2">
-        <button id="a-prev" onclick="adminPage(-1)" class="px-3 py-1.5 rounded border border-slate-700 bg-slate-800/60 hover:bg-slate-700 disabled:opacity-40 transition">Previous</button>
-        <button id="a-next" onclick="adminPage(1)" class="px-3 py-1.5 rounded border border-slate-700 bg-slate-800/60 hover:bg-slate-700 disabled:opacity-40 transition">Next</button>
+        <button id="a-prev" onclick="adminPage(-1)" class="px-3 py-1.5 rounded border border-slate-200 bg-slate-100 hover:bg-slate-100 disabled:opacity-40 transition">Previous</button>
+        <button id="a-next" onclick="adminPage(1)" class="px-3 py-1.5 rounded border border-slate-200 bg-slate-100 hover:bg-slate-100 disabled:opacity-40 transition">Next</button>
       </div>
     </div>
   </main>
@@ -1725,7 +1726,7 @@ tailwind.config = {
   <main id="page-store" class="page-view hidden p-8 flex-1">
     <div class="max-w-5xl space-y-6">
       <!-- Store Header Card -->
-      <div class="glass-panel rounded-xl p-6 border border-slate-800">
+      <div class="glass-panel rounded-xl p-6 border border-slate-200">
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shadow-sm">
@@ -1733,16 +1734,16 @@ tailwind.config = {
             </div>
             <div>
               <h3 class="text-base font-bold text-white">Dynamic Store & System Configuration</h3>
-              <p class="text-xs text-slate-400">Synchronized dynamically via backend API (<code>GET /admin/store</code>, <code>PUT /admin/store</code>)</p>
+              <p class="text-xs text-slate-500">Synchronized dynamically via backend API (<code>GET /admin/store</code>, <code>PUT /admin/store</code>)</p>
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <span id="store-sync-status" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-950/60 border border-emerald-800/80 text-emerald-300">
+            <span id="store-sync-status" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 border border-emerald-200 text-emerald-700">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               <span>API Connected</span>
             </span>
-            <button onclick="loadStoreFromApi(true)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">
-              <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-400"></i>
+            <button onclick="loadStoreFromApi(true)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium transition">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-500"></i>
               <span>Fetch API</span>
             </button>
           </div>
@@ -1752,74 +1753,74 @@ tailwind.config = {
         <form onsubmit="event.preventDefault(); saveStoreSettings();" class="mt-6 space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Backend URL</label>
-              <input type="text" id="store-backend-url" required class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
-              <p class="text-[10px] text-slate-300 mt-1">Host endpoint for Electron assistant synchronization</p>
+              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Backend URL</label>
+              <input type="text" id="store-backend-url" required class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+              <p class="text-[10px] text-slate-700 mt-1">Host endpoint for Electron assistant synchronization</p>
             </div>
 
             <div>
-              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Default Plan For New Registrations</label>
-              <select id="store-default-plan" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Default Plan For New Registrations</label>
+              <select id="store-default-plan" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
                 <option value="free">free (Standard Trial)</option>
                 <option value="paid">paid (Instant Unlimited)</option>
               </select>
-              <p class="text-[10px] text-slate-300 mt-1">Tier assigned when customers initiate their first login</p>
+              <p class="text-[10px] text-slate-700 mt-1">Tier assigned when customers initiate their first login</p>
             </div>
 
             <div>
-              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Default Trial Balance (Seconds)</label>
+              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Default Trial Balance (Seconds)</label>
               <div class="flex gap-2">
-                <input type="number" id="store-trial-time" min="0" required class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
-                <span id="store-trial-minutes-display" class="px-3 py-2 rounded-lg bg-dark-950 border border-slate-800 text-xs text-indigo-400 font-mono whitespace-nowrap">30m</span>
+                <input type="number" id="store-trial-time" min="0" required class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+                <span id="store-trial-minutes-display" class="px-3 py-2 rounded-lg bg-dark-950 border border-slate-200 text-xs text-indigo-400 font-mono whitespace-nowrap">30m</span>
               </div>
-              <p class="text-[10px] text-slate-300 mt-1">Initial voice & transcription allocation for free users</p>
+              <p class="text-[10px] text-slate-700 mt-1">Initial voice & transcription allocation for free users</p>
             </div>
 
             <div>
-              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Rows Per Page (Universal Pagination)</label>
-              <select id="store-per-page" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Rows Per Page (Universal Pagination)</label>
+              <select id="store-per-page" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
                 <option value="10">10 rows per page</option>
                 <option value="20" selected>20 rows per page</option>
                 <option value="50">50 rows per page</option>
                 <option value="100">100 rows per page</option>
               </select>
-              <p class="text-[10px] text-slate-300 mt-1">Applied dynamically across Customers, Recharges, & Events tables</p>
+              <p class="text-[10px] text-slate-700 mt-1">Applied dynamically across Customers, Recharges, & Events tables</p>
             </div>
 
             <div>
-              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Support Phone / Help Desk</label>
-              <input type="text" id="store-support-phone" placeholder="+919876543210" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
-              <p class="text-[10px] text-slate-300 mt-1">Contact number displayed for customer assistance</p>
+              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Support Phone / Help Desk</label>
+              <input type="text" id="store-support-phone" placeholder="+919876543210" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+              <p class="text-[10px] text-slate-700 mt-1">Contact number displayed for customer assistance</p>
             </div>
 
             <div>
-              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">System Currency</label>
-              <input type="text" id="store-currency" value="INR" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white font-mono uppercase focus:outline-none focus:border-indigo-500 transition"/>
-              <p class="text-[10px] text-slate-300 mt-1">Currency symbol/code for recharge transactions</p>
+              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">System Currency</label>
+              <input type="text" id="store-currency" value="INR" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white font-mono uppercase focus:outline-none focus:border-indigo-500 transition"/>
+              <p class="text-[10px] text-slate-700 mt-1">Currency symbol/code for recharge transactions</p>
             </div>
 
             <div>
-              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Session Expiry Timeout (Minutes)</label>
-              <input type="number" id="store-session-timeout" min="15" value="1440" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
-              <p class="text-[10px] text-slate-300 mt-1">Inactivity window before automatic session revocation</p>
+              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Session Expiry Timeout (Minutes)</label>
+              <input type="number" id="store-session-timeout" min="15" value="1440" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+              <p class="text-[10px] text-slate-700 mt-1">Inactivity window before automatic session revocation</p>
             </div>
 
             <div>
-              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Auto-Generate OTP Policy</label>
-              <select id="store-auto-otp" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+              <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Auto-Generate OTP Policy</label>
+              <select id="store-auto-otp" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
                 <option value="true" selected>Enabled (Auto 6-digit numeric OTP)</option>
                 <option value="false">Manual Only</option>
               </select>
-              <p class="text-[10px] text-slate-300 mt-1">Automatic verification dispatch upon customer phone registration</p>
+              <p class="text-[10px] text-slate-700 mt-1">Automatic verification dispatch upon customer phone registration</p>
             </div>
           </div>
 
-          <div class="mt-6 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-800">
-            <div class="text-[11px] text-slate-400">
-              Last saved: <span id="store-last-saved" class="font-mono text-slate-300">—</span>
+          <div class="mt-6 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200">
+            <div class="text-[11px] text-slate-500">
+              Last saved: <span id="store-last-saved" class="font-mono text-slate-700">—</span>
             </div>
             <div class="flex items-center gap-3">
-              <button type="button" onclick="resetStoreDefaults()" class="px-4 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">
+              <button type="button" onclick="resetStoreDefaults()" class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium transition">
                 Reset System Defaults
               </button>
               <button type="submit" id="btn-save-store" class="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">
@@ -1832,15 +1833,15 @@ tailwind.config = {
       </div>
 
       <!-- Live API Response Preview Card -->
-      <div class="glass-panel rounded-xl p-6 border border-slate-800">
+      <div class="glass-panel rounded-xl p-6 border border-slate-200">
         <div class="flex items-center justify-between mb-3">
-          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
             <i data-lucide="database" class="w-4 h-4 text-rose-400"></i>
             Live API Response (<code>GET /admin/store</code>)
           </h4>
-          <span class="text-[10px] font-mono text-slate-300">collection: pas_db.system_settings</span>
+          <span class="text-[10px] font-mono text-slate-700">collection: pas_db.system_settings</span>
         </div>
-        <pre id="store-json-preview" class="bg-dark-950 border border-slate-800 rounded-lg p-4 text-rose-300 text-[11px] font-mono overflow-x-auto max-h-64"></pre>
+        <pre id="store-json-preview" class="bg-dark-950 border border-slate-200 rounded-lg p-4 text-rose-300 text-[11px] font-mono overflow-x-auto max-h-64"></pre>
       </div>
     </div>
   </main>
@@ -1854,48 +1855,48 @@ tailwind.config = {
 <!-- MODAL: CUSTOMER USAGE & MINUTES HISTORY TRACKER                -->
 <!-- ══════════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="customer-usage-modal" onclick="closeModalOnOverlay(event, 'customer-usage-modal')">
-  <div class="glass-panel w-full max-w-3xl rounded-2xl border border-slate-700 p-6 shadow-2xl relative overflow-y-auto max-h-[90vh]">
-    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+  <div class="bg-white border border-slate-200 shadow-2xl w-full max-w-3xl rounded-2xl border border-slate-200 p-6 shadow-2xl relative overflow-y-auto max-h-[90vh]">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200">
       <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+        <div class="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-600">
           <i data-lucide="history" class="w-4 h-4"></i>
         </div>
         <div>
           <h3 class="text-sm font-bold text-white">Minutes Consumption & Usage History</h3>
-          <p class="text-[11px] text-slate-400">Customer: <span id="usage-modal-phone" class="font-mono text-cyan-300 font-bold">—</span></p>
+          <p class="text-[11px] text-slate-500">Customer: <span id="usage-modal-phone" class="font-mono text-cyan-300 font-bold">—</span></p>
         </div>
       </div>
-      <button onclick="closeModal('customer-usage-modal')" class="text-slate-400 hover:text-white transition p-1">
+      <button onclick="closeModal('customer-usage-modal')" class="text-slate-500 hover:text-white transition p-1">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
 
     <!-- Summary Stat Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 my-5">
-      <div class="bg-dark-950/80 border border-slate-800 rounded-xl p-3 text-center">
-        <div class="text-[10px] text-slate-400 font-semibold uppercase">Remaining Balance</div>
-        <div id="usage-stat-balance" class="text-base font-extrabold text-emerald-400 mt-1">—</div>
+      <div class="bg-dark-950/80 border border-slate-200 rounded-xl p-3 text-center">
+        <div class="text-[10px] text-slate-500 font-semibold uppercase">Remaining Balance</div>
+        <div id="usage-stat-balance" class="text-base font-extrabold text-emerald-600 mt-1">—</div>
       </div>
-      <div class="bg-dark-950/80 border border-slate-800 rounded-xl p-3 text-center">
-        <div class="text-[10px] text-slate-400 font-semibold uppercase">Total Minutes Used</div>
+      <div class="bg-dark-950/80 border border-slate-200 rounded-xl p-3 text-center">
+        <div class="text-[10px] text-slate-500 font-semibold uppercase">Total Minutes Used</div>
         <div id="usage-stat-consumed" class="text-base font-extrabold text-amber-400 mt-1">—</div>
       </div>
-      <div class="bg-dark-950/80 border border-slate-800 rounded-xl p-3 text-center">
-        <div class="text-[10px] text-slate-400 font-semibold uppercase">Total Sessions</div>
+      <div class="bg-dark-950/80 border border-slate-200 rounded-xl p-3 text-center">
+        <div class="text-[10px] text-slate-500 font-semibold uppercase">Total Sessions</div>
         <div id="usage-stat-sessions" class="text-base font-extrabold text-indigo-400 mt-1">—</div>
       </div>
-      <div class="bg-dark-950/80 border border-slate-800 rounded-xl p-3 text-center">
-        <div class="text-[10px] text-slate-400 font-semibold uppercase">Active Device</div>
-        <div id="usage-stat-device" class="text-xs font-mono font-bold text-slate-200 mt-1.5 truncate">None</div>
+      <div class="bg-dark-950/80 border border-slate-200 rounded-xl p-3 text-center">
+        <div class="text-[10px] text-slate-500 font-semibold uppercase">Active Device</div>
+        <div id="usage-stat-device" class="text-xs font-mono font-bold text-slate-800 mt-1.5 truncate">None</div>
       </div>
     </div>
 
     <!-- Usage History Log Table -->
-    <div class="glass-panel rounded-xl border border-slate-800 overflow-hidden shadow-sm">
+    <div class="glass-panel rounded-xl border border-slate-200 overflow-hidden shadow-sm">
       <div class="overflow-x-auto max-h-72 overflow-y-auto">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
-            <tr class="bg-dark-950/90 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 font-semibold sticky top-0">
+            <tr class="bg-dark-950/90 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 font-semibold sticky top-0">
               <th class="py-2.5 px-3">Date & Time</th>
               <th class="py-2.5 px-3">Event / Action</th>
               <th class="py-2.5 px-3">Minutes Consumed</th>
@@ -1903,16 +1904,16 @@ tailwind.config = {
               <th class="py-2.5 px-3">Device / Session</th>
             </tr>
           </thead>
-          <tbody id="usage-history-tbody" class="divide-y divide-slate-800/60 font-mono text-[11px]">
-            <tr><td colspan="5" class="py-6 text-center text-slate-400">Loading usage history…</td></tr>
+          <tbody id="usage-history-tbody" class="divide-y divide-slate-100/60 font-mono text-[11px]">
+            <tr><td colspan="5" class="py-6 text-center text-slate-500">Loading usage history…</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <div class="mt-6 flex justify-between items-center pt-4 border-t border-slate-800">
-      <span class="text-[11px] text-slate-400">Each login consumes 5 mins (300s). Extra devices auto force-logged out.</span>
-      <button onclick="closeModal('customer-usage-modal')" class="px-4 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">
+    <div class="mt-6 flex justify-between items-center pt-4 border-t border-slate-200">
+      <span class="text-[11px] text-slate-500">Each login consumes 5 mins (300s). Extra devices auto force-logged out.</span>
+      <button onclick="closeModal('customer-usage-modal')" class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium transition">
         Close
       </button>
     </div>
@@ -1920,58 +1921,58 @@ tailwind.config = {
 </div>
 
 <div class="modal-overlay" id="export-modal" onclick="closeModalOnOverlay(event, 'export-modal')">
-  <div class="bg-dark-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+  <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
           <i data-lucide="download" class="w-4 h-4"></i>
         </div>
         <div>
           <h3 class="text-sm font-bold text-white">Export Dataset</h3>
-          <p class="text-[11px] text-slate-400">Select export file format</p>
+          <p class="text-[11px] text-slate-500">Select export file format</p>
         </div>
       </div>
-      <button onclick="closeModal('export-modal')" class="text-slate-400 hover:text-white transition">
+      <button onclick="closeModal('export-modal')" class="text-slate-500 hover:text-white transition">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
 
     <div class="mt-5 space-y-4">
       <div>
-        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Target Dataset</label>
-        <input type="text" id="export-resource-display" readonly class="w-full bg-dark-950 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-white font-mono uppercase"/>
+        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Target Dataset</label>
+        <input type="text" id="export-resource-display" readonly class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white font-mono uppercase"/>
       </div>
 
       <div>
-        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-2">Choose Format</label>
+        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-2">Choose Format</label>
         <div class="grid grid-cols-2 gap-3">
-          <label class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 hover:bg-slate-800/80 cursor-pointer transition">
+          <label class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white cursor-pointer transition">
             <input type="radio" name="export-format" value="xlsx" checked class="text-indigo-600 focus:ring-indigo-500"/>
             <div>
               <div class="text-xs font-bold text-white flex items-center gap-1.5">
-                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
                 <span>Excel (.xlsx)</span>
               </div>
-              <div class="text-[10px] text-slate-400">Formatted spreadsheet</div>
+              <div class="text-[10px] text-slate-500">Formatted spreadsheet</div>
             </div>
           </label>
 
-          <label class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 hover:bg-slate-800/80 cursor-pointer transition">
+          <label class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white cursor-pointer transition">
             <input type="radio" name="export-format" value="json" class="text-indigo-600 focus:ring-indigo-500"/>
             <div>
               <div class="text-xs font-bold text-white flex items-center gap-1.5">
                 <i data-lucide="file-code" class="w-3.5 h-3.5 text-amber-400"></i>
                 <span>JSON (.json)</span>
               </div>
-              <div class="text-[10px] text-slate-400">Raw structured data</div>
+              <div class="text-[10px] text-slate-500">Raw structured data</div>
             </div>
           </label>
         </div>
       </div>
     </div>
 
-    <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-800">
-      <button onclick="closeModal('export-modal')" class="px-4 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">
+    <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-200">
+      <button onclick="closeModal('export-modal')" class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium transition">
         Cancel
       </button>
       <button onclick="executeExport()" class="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">
@@ -1986,36 +1987,36 @@ tailwind.config = {
 <!-- MODAL: ADD CUSTOMER                                            -->
 <!-- ══════════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="add-customer-modal" onclick="closeModalOnOverlay(event, 'add-customer-modal')">
-  <div class="bg-dark-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+  <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
           <i data-lucide="user-plus" class="w-4 h-4"></i>
         </div>
         <h3 class="text-sm font-bold text-white">Add New Customer</h3>
       </div>
-      <button onclick="closeModal('add-customer-modal')" class="text-slate-400 hover:text-white transition">
+      <button onclick="closeModal('add-customer-modal')" class="text-slate-500 hover:text-white transition">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
 
     <form onsubmit="event.preventDefault(); submitAddCustomer();" class="mt-4 space-y-4">
       <div>
-        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Phone Number *</label>
-        <input type="text" id="add-phone" required placeholder="+919876543210" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Phone Number *</label>
+        <input type="text" id="add-phone" required placeholder="+919876543210" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
       </div>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Initial OTP</label>
+          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Initial OTP</label>
           <div class="flex gap-2">
-            <input type="text" id="add-otp" maxlength="6" placeholder="Auto" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-amber-300 font-mono tracking-widest focus:outline-none focus:border-indigo-500 transition"/>
-            <button type="button" onclick="generateRandomOtp('add-otp')" class="px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition" title="Generate random OTP">↻</button>
+            <input type="text" id="add-otp" maxlength="6" placeholder="Auto" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-amber-700 font-mono tracking-widest focus:outline-none focus:border-indigo-500 transition"/>
+            <button type="button" onclick="generateRandomOtp('add-otp')" class="px-2.5 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs transition" title="Generate random OTP">↻</button>
           </div>
         </div>
         <div>
-          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Plan Type</label>
-          <select id="add-plan" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Plan Type</label>
+          <select id="add-plan" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
             <option value="free" selected>Free (Default)</option>
             <option value="paid">Paid</option>
           </select>
@@ -2024,30 +2025,30 @@ tailwind.config = {
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Source</label>
-          <select id="add-source" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Source</label>
+          <select id="add-source" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
             <option value="admin" selected>admin</option>
             <option value="self">self</option>
           </select>
         </div>
         <div>
-          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Initial Time (Minutes)</label>
-          <input type="number" id="add-time-min" min="0" value="30" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Initial Time (Minutes)</label>
+          <input type="number" id="add-time-min" min="0" value="30" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
         </div>
       </div>
 
       <div>
-        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Custom Referral Code (Optional)</label>
-        <input type="text" id="add-referral" placeholder="Leave empty for auto-generated" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Custom Referral Code (Optional)</label>
+        <input type="text" id="add-referral" placeholder="Leave empty for auto-generated" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
       </div>
 
       <div>
-        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Device ID (Optional)</label>
-        <input type="text" id="add-device" placeholder="e.g. dev_mac_a8f9" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Device ID (Optional)</label>
+        <input type="text" id="add-device" placeholder="e.g. dev_mac_a8f9" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
       </div>
 
-      <div class="pt-3 border-t border-slate-800 flex justify-end gap-3">
-        <button type="button" onclick="closeModal('add-customer-modal')" class="px-4 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">Cancel</button>
+      <div class="pt-3 border-t border-slate-200 flex justify-end gap-3">
+        <button type="button" onclick="closeModal('add-customer-modal')" class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium transition">Cancel</button>
         <button type="submit" id="btn-submit-add-customer" class="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">
           <i data-lucide="user-plus" class="w-4 h-4"></i>
           <span>Create Customer</span>
@@ -2061,18 +2062,18 @@ tailwind.config = {
 <!-- MODAL: EDIT CUSTOMER                                           -->
 <!-- ══════════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="edit-customer-modal" onclick="closeModalOnOverlay(event, 'edit-customer-modal')">
-  <div class="bg-dark-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+  <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
           <i data-lucide="edit-3" class="w-4 h-4"></i>
         </div>
         <div>
           <h3 class="text-sm font-bold text-white">Edit Customer</h3>
-          <p class="text-[11px] text-slate-400 font-mono" id="edit-phone-display"></p>
+          <p class="text-[11px] text-slate-500 font-mono" id="edit-phone-display"></p>
         </div>
       </div>
-      <button onclick="closeModal('edit-customer-modal')" class="text-slate-400 hover:text-white transition">
+      <button onclick="closeModal('edit-customer-modal')" class="text-slate-500 hover:text-white transition">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -2080,15 +2081,15 @@ tailwind.config = {
     <form onsubmit="event.preventDefault(); submitEditCustomer();" class="mt-4 space-y-4">
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Customer OTP</label>
+          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Customer OTP</label>
           <div class="flex gap-2">
-            <input type="text" id="edit-otp" maxlength="6" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-amber-300 font-mono tracking-widest focus:outline-none focus:border-indigo-500 transition"/>
-            <button type="button" onclick="generateRandomOtp('edit-otp')" class="px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition" title="Generate random OTP">↻</button>
+            <input type="text" id="edit-otp" maxlength="6" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-amber-700 font-mono tracking-widest focus:outline-none focus:border-indigo-500 transition"/>
+            <button type="button" onclick="generateRandomOtp('edit-otp')" class="px-2.5 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs transition" title="Generate random OTP">↻</button>
           </div>
         </div>
         <div>
-          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Plan Tier</label>
-          <select id="edit-plan" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Plan Tier</label>
+          <select id="edit-plan" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
             <option value="free">Free</option>
             <option value="paid">Paid</option>
           </select>
@@ -2097,30 +2098,30 @@ tailwind.config = {
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Source</label>
-          <select id="edit-source" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Source</label>
+          <select id="edit-source" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
             <option value="admin">admin</option>
             <option value="self">self</option>
           </select>
         </div>
         <div>
-          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Remaining Seconds</label>
-          <input type="number" id="edit-time-sec" min="0" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Remaining Seconds</label>
+          <input type="number" id="edit-time-sec" min="0" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
         </div>
       </div>
 
       <div>
-        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Referral Code Generated</label>
-        <input type="text" id="edit-referral" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Referral Code Generated</label>
+        <input type="text" id="edit-referral" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
       </div>
 
       <div>
-        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Device ID</label>
-        <input type="text" id="edit-device" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Device ID</label>
+        <input type="text" id="edit-device" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
       </div>
 
-      <div class="pt-3 border-t border-slate-800 flex justify-end gap-3">
-        <button type="button" onclick="closeModal('edit-customer-modal')" class="px-4 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">Cancel</button>
+      <div class="pt-3 border-t border-slate-200 flex justify-end gap-3">
+        <button type="button" onclick="closeModal('edit-customer-modal')" class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium transition">Cancel</button>
         <button type="submit" id="btn-submit-edit-customer" class="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">
           <i data-lucide="check" class="w-4 h-4"></i>
           <span>Save Changes</span>
@@ -2134,18 +2135,18 @@ tailwind.config = {
 <!-- MODAL: LOGIN ATTEMPTS                                          -->
 <!-- ══════════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="attempts-overlay" onclick="closeModalOnOverlay(event, 'attempts-overlay')">
-  <div class="bg-dark-900 border border-slate-700 rounded-2xl w-full max-w-4xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+  <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-4xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
           <i data-lucide="key-round" class="w-4 h-4"></i>
         </div>
         <div>
           <h3 id="att-title" class="text-sm font-bold text-white">Login Attempts</h3>
-          <p id="att-subtitle" class="text-[11px] text-slate-400 font-mono"></p>
+          <p id="att-subtitle" class="text-[11px] text-slate-500 font-mono"></p>
         </div>
       </div>
-      <button onclick="closeModal('attempts-overlay')" class="text-slate-400 hover:text-white transition">
+      <button onclick="closeModal('attempts-overlay')" class="text-slate-500 hover:text-white transition">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -2153,7 +2154,7 @@ tailwind.config = {
     <div class="mt-4 overflow-x-auto">
       <table class="w-full text-left text-xs border-collapse">
         <thead>
-          <tr class="bg-dark-950 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
+          <tr class="bg-dark-950 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
             <th class="py-2.5 px-3.5">Timestamp</th>
             <th class="py-2.5 px-3.5">IP Address</th>
             <th class="py-2.5 px-3.5">Location</th>
@@ -2163,8 +2164,8 @@ tailwind.config = {
             <th class="py-2.5 px-3.5 text-right">View Detail</th>
           </tr>
         </thead>
-        <tbody id="att-tbody" class="divide-y divide-slate-800/60">
-          <tr><td colspan="7" class="py-8 text-center text-slate-300 font-medium">Loading attempts…</td></tr>
+        <tbody id="att-tbody" class="divide-y divide-slate-100/60">
+          <tr><td colspan="7" class="py-8 text-center text-slate-700 font-medium">Loading attempts…</td></tr>
         </tbody>
       </table>
     </div>
@@ -2175,66 +2176,66 @@ tailwind.config = {
 <!-- MODAL: RECHARGE CUSTOMER (+ / - Time, Plan Upgrade, Amount)    -->
 <!-- ══════════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="recharge-overlay" onclick="closeModalOnOverlay(event, 'recharge-overlay')">
-  <div class="bg-dark-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+  <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200">
       <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600">
           <i data-lucide="zap" class="w-4 h-4"></i>
         </div>
         <div>
           <h3 class="text-sm font-bold text-white">Recharge Customer Plan & Time</h3>
-          <p id="rec-phone-sub" class="text-[11px] text-slate-400 font-mono"></p>
+          <p id="rec-phone-sub" class="text-[11px] text-slate-500 font-mono"></p>
         </div>
       </div>
-      <button onclick="closeModal('recharge-overlay')" class="text-slate-400 hover:text-white transition">
+      <button onclick="closeModal('recharge-overlay')" class="text-slate-500 hover:text-white transition">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
 
     <form onsubmit="event.preventDefault(); submitRecharge();" class="mt-4 space-y-4">
-      <div class="p-3 rounded-xl bg-dark-950 border border-slate-800 text-xs flex justify-between items-center">
+      <div class="p-3 rounded-xl bg-dark-950 border border-slate-200 text-xs flex justify-between items-center">
         <div>
-          <span class="text-slate-400 block text-[10px] uppercase">Current Plan</span>
+          <span class="text-slate-500 block text-[10px] uppercase">Current Plan</span>
           <span id="rec-curr-plan" class="font-bold text-white uppercase">—</span>
         </div>
         <div class="text-right">
-          <span class="text-slate-400 block text-[10px] uppercase">Current Time Balance</span>
-          <span id="rec-curr-time" class="font-bold text-emerald-400">—</span>
+          <span class="text-slate-500 block text-[10px] uppercase">Current Time Balance</span>
+          <span id="rec-curr-time" class="font-bold text-emerald-600">—</span>
         </div>
       </div>
 
       <div>
-        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Adjustment Mode (+ / -)</label>
-        <div class="grid grid-cols-2 gap-2 p-1 rounded-lg bg-dark-950 border border-slate-800">
+        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Adjustment Mode (+ / -)</label>
+        <div class="grid grid-cols-2 gap-2 p-1 rounded-lg bg-dark-950 border border-slate-200">
           <button type="button" id="btn-mode-add" onclick="setRecMode('add')" class="py-1.5 rounded-md text-xs font-semibold bg-indigo-600 text-white transition">
             + Increase Time (Add)
           </button>
-          <button type="button" id="btn-mode-sub" onclick="setRecMode('sub')" class="py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition">
+          <button type="button" id="btn-mode-sub" onclick="setRecMode('sub')" class="py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-white transition">
             - Decrease Time (Minus)
           </button>
         </div>
       </div>
 
       <div>
-        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Quick Presets</label>
+        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Quick Presets</label>
         <div class="flex flex-wrap gap-2">
-          <button type="button" onclick="applyQuickTime(15, 'min')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition">+15m</button>
-          <button type="button" onclick="applyQuickTime(30, 'min')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition">+30m</button>
-          <button type="button" onclick="applyQuickTime(1, 'hour')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition">+1h</button>
-          <button type="button" onclick="applyQuickTime(2, 'hour')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition">+2h</button>
-          <button type="button" onclick="applyQuickTime(-15, 'min')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-red-300 text-xs font-medium border border-red-900/40 transition">-15m</button>
-          <button type="button" onclick="applyQuickTime(-30, 'min')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-red-300 text-xs font-medium border border-red-900/40 transition">-30m</button>
+          <button type="button" onclick="applyQuickTime(15, 'min')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200 transition">+15m</button>
+          <button type="button" onclick="applyQuickTime(30, 'min')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200 transition">+30m</button>
+          <button type="button" onclick="applyQuickTime(1, 'hour')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200 transition">+1h</button>
+          <button type="button" onclick="applyQuickTime(2, 'hour')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200 transition">+2h</button>
+          <button type="button" onclick="applyQuickTime(-15, 'min')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 text-red-300 text-xs font-medium border border-red-900/40 transition">-15m</button>
+          <button type="button" onclick="applyQuickTime(-30, 'min')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 text-red-300 text-xs font-medium border border-red-900/40 transition">-30m</button>
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Time Value</label>
-          <input type="number" id="rec-time-val" min="1" value="30" oninput="updateRecPreview()" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Time Value</label>
+          <input type="number" id="rec-time-val" min="1" value="30" oninput="updateRecPreview()" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
         </div>
         <div>
-          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Unit</label>
-          <select id="rec-time-unit" onchange="updateRecPreview()" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Unit</label>
+          <select id="rec-time-unit" onchange="updateRecPreview()" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
             <option value="min" selected>Minutes</option>
             <option value="hour">Hours</option>
             <option value="sec">Seconds</option>
@@ -2244,30 +2245,30 @@ tailwind.config = {
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Upgrade / Set Plan</label>
-          <select id="rec-plan" onchange="updateRecPreview()" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Upgrade / Set Plan</label>
+          <select id="rec-plan" onchange="updateRecPreview()" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
             <option value="paid" selected>Paid (Upgraded)</option>
             <option value="free">Free</option>
           </select>
         </div>
         <div>
-          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Payment Amount (INR)</label>
-          <input type="number" step="0.01" min="0" id="rec-amount" value="0.00" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Payment Amount (INR)</label>
+          <input type="number" step="0.01" min="0" id="rec-amount" value="0.00" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Recharge Source</label>
-          <select id="rec-source" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Recharge Source</label>
+          <select id="rec-source" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
             <option value="manual" selected>manual</option>
             <option value="admin">admin</option>
             <option value="gateway">gateway</option>
           </select>
         </div>
         <div>
-          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Payment Status</label>
-          <select id="rec-status" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
+          <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Payment Status</label>
+          <select id="rec-status" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition">
             <option value="completed" selected>completed</option>
             <option value="manual">manual</option>
             <option value="pending">pending</option>
@@ -2277,16 +2278,16 @@ tailwind.config = {
       </div>
 
       <div>
-        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Transaction Notes (Optional)</label>
-        <input type="text" id="rec-notes" placeholder="e.g. Manual bank transfer verified, cash received" class="w-full bg-dark-950 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
+        <label class="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Transaction Notes (Optional)</label>
+        <input type="text" id="rec-notes" placeholder="e.g. Manual bank transfer verified, cash received" class="w-full bg-dark-950 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"/>
       </div>
 
       <div class="p-3 rounded-xl bg-indigo-950/40 border border-indigo-800/60 text-xs text-indigo-300" id="rec-preview">
         Calculating preview…
       </div>
 
-      <div class="pt-3 border-t border-slate-800 flex justify-end gap-3">
-        <button type="button" onclick="closeModal('recharge-overlay')" class="px-4 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">Cancel</button>
+      <div class="pt-3 border-t border-slate-200 flex justify-end gap-3">
+        <button type="button" onclick="closeModal('recharge-overlay')" class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-800 hover:bg-slate-100 text-slate-700 text-xs font-medium transition">Cancel</button>
         <button type="submit" id="rec-submit-btn" class="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition">
           <i data-lucide="zap" class="w-4 h-4"></i>
           <span>Apply Recharge</span>
@@ -2302,60 +2303,60 @@ tailwind.config = {
 
 <!-- ── ADD ADMIN MODAL ── -->
 <div class="modal-overlay" id="add-admin-modal" onclick="closeModalOnOverlay(event, 'add-admin-modal')">
-  <div class="glass-panel w-full max-w-md rounded-2xl border border-slate-700 p-6 shadow-2xl relative">
-    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+  <div class="bg-white border border-slate-200 shadow-2xl w-full max-w-md rounded-2xl border border-slate-200 p-6 shadow-2xl relative">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200">
       <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-400">
+        <div class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-600">
           <i data-lucide="shield" class="w-4 h-4"></i>
         </div>
         <div>
           <h3 class="text-sm font-bold text-white">Create Admin Account</h3>
-          <p class="text-[11px] text-slate-400">Stores crypto-hashed bcrypt password</p>
+          <p class="text-[11px] text-slate-500">Stores crypto-hashed bcrypt password</p>
         </div>
       </div>
-      <button onclick="closeModal('add-admin-modal')" class="text-slate-400 hover:text-white p-1 rounded-lg">
+      <button onclick="closeModal('add-admin-modal')" class="text-slate-500 hover:text-white p-1 rounded-lg">
         <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
 
     <form onsubmit="submitAddAdmin(event)" class="mt-4 space-y-4">
       <div>
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
-        <input type="text" id="add-a-name" required placeholder="Admin Name" class="w-full bg-dark-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"/>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
+        <input type="text" id="add-a-name" required placeholder="Admin Name" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"/>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Email Address</label>
-        <input type="email" id="add-a-email" required placeholder="admin@example.com" class="w-full bg-dark-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"/>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
+        <input type="email" id="add-a-email" required placeholder="admin@example.com" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"/>
       </div>
       <div>
         <div class="flex items-center justify-between mb-1">
-          <label class="block text-xs font-semibold text-slate-300">Password</label>
-          <button type="button" onclick="generateRandomAdminPassword('add-a-password')" class="text-[10px] text-sky-400 hover:text-sky-300 flex items-center gap-1">
+          <label class="block text-xs font-semibold text-slate-700">Password</label>
+          <button type="button" onclick="generateRandomAdminPassword('add-a-password')" class="text-[10px] text-sky-600 hover:text-sky-300 flex items-center gap-1">
             <i data-lucide="wand-2" class="w-3 h-3"></i> Generate Strong
           </button>
         </div>
-        <input type="password" id="add-a-password" required minlength="6" placeholder="Minimum 6 characters" class="w-full bg-dark-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"/>
-        <p class="text-[10px] text-slate-400 mt-1">Automatically encrypted with bcrypt salt before MongoDB persistence.</p>
+        <input type="password" id="add-a-password" required minlength="6" placeholder="Minimum 6 characters" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"/>
+        <p class="text-[10px] text-slate-500 mt-1">Automatically encrypted with bcrypt salt before MongoDB persistence.</p>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Role</label>
-          <select id="add-a-role" class="w-full bg-dark-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500">
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Role</label>
+          <select id="add-a-role" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500">
             <option value="admin">Admin</option>
             <option value="superadmin">Superadmin</option>
             <option value="moderator">Moderator</option>
           </select>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Status</label>
-          <select id="add-a-active" class="w-full bg-dark-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500">
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Status</label>
+          <select id="add-a-active" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500">
             <option value="true">Active</option>
             <option value="false">Inactive</option>
           </select>
         </div>
       </div>
       <div class="pt-2 flex justify-end gap-2">
-        <button type="button" onclick="closeModal('add-admin-modal')" class="px-4 py-2 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-medium">Cancel</button>
+        <button type="button" onclick="closeModal('add-admin-modal')" class="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-800 text-slate-700 text-xs font-medium">Cancel</button>
         <button type="submit" class="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-md">Create Admin</button>
       </div>
     </form>
@@ -2364,55 +2365,55 @@ tailwind.config = {
 
 <!-- ── EDIT ADMIN MODAL ── -->
 <div class="modal-overlay" id="edit-admin-modal" onclick="closeModalOnOverlay(event, 'edit-admin-modal')">
-  <div class="glass-panel w-full max-w-md rounded-2xl border border-slate-700 p-6 shadow-2xl relative">
-    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+  <div class="bg-white border border-slate-200 shadow-2xl w-full max-w-md rounded-2xl border border-slate-200 p-6 shadow-2xl relative">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
           <i data-lucide="edit-3" class="w-4 h-4"></i>
         </div>
         <div>
           <h3 class="text-sm font-bold text-white">Edit Admin Account</h3>
-          <p class="text-[11px] text-slate-400">Update account role, status or password</p>
+          <p class="text-[11px] text-slate-500">Update account role, status or password</p>
         </div>
       </div>
-      <button onclick="closeModal('edit-admin-modal')" class="text-slate-400 hover:text-white p-1 rounded-lg">
+      <button onclick="closeModal('edit-admin-modal')" class="text-slate-500 hover:text-white p-1 rounded-lg">
         <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
 
     <form onsubmit="submitEditAdmin(event)" class="mt-4 space-y-4">
       <div>
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Email Address</label>
-        <input type="email" id="edit-a-email" readonly class="w-full bg-dark-900/60 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-400 cursor-not-allowed"/>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
+        <input type="email" id="edit-a-email" readonly class="w-full bg-white/60 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-500 cursor-not-allowed"/>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
-        <input type="text" id="edit-a-name" required placeholder="Admin Name" class="w-full bg-dark-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"/>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
+        <input type="text" id="edit-a-name" required placeholder="Admin Name" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"/>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Role</label>
-          <select id="edit-a-role" class="w-full bg-dark-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Role</label>
+          <select id="edit-a-role" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
             <option value="superadmin">Superadmin</option>
             <option value="admin">Admin</option>
             <option value="moderator">Moderator</option>
           </select>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Status</label>
-          <select id="edit-a-active" class="w-full bg-dark-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Status</label>
+          <select id="edit-a-active" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
             <option value="true">Active</option>
             <option value="false">Inactive</option>
           </select>
         </div>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-300 mb-1">New Password (Optional)</label>
-        <input type="password" id="edit-a-password" minlength="6" placeholder="Leave blank to keep unchanged" class="w-full bg-dark-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"/>
-        <p class="text-[10px] text-slate-400 mt-1">If provided, this will replace the current password hash with a new bcrypt hash.</p>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">New Password (Optional)</label>
+        <input type="password" id="edit-a-password" minlength="6" placeholder="Leave blank to keep unchanged" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"/>
+        <p class="text-[10px] text-slate-500 mt-1">If provided, this will replace the current password hash with a new bcrypt hash.</p>
       </div>
       <div class="pt-2 flex justify-end gap-2">
-        <button type="button" onclick="closeModal('edit-admin-modal')" class="px-4 py-2 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-medium">Cancel</button>
+        <button type="button" onclick="closeModal('edit-admin-modal')" class="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-800 text-slate-700 text-xs font-medium">Cancel</button>
         <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md">Save Changes</button>
       </div>
     </form>
@@ -2421,33 +2422,33 @@ tailwind.config = {
 
 <!-- ── ADMIN LOGIN & JWT TOKEN TESTER MODAL ── -->
 <div class="modal-overlay" id="admin-login-modal" onclick="closeModalOnOverlay(event, 'admin-login-modal')">
-  <div class="glass-panel w-full max-w-lg rounded-2xl border border-slate-700 p-6 shadow-2xl relative">
-    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+  <div class="bg-white border border-slate-200 shadow-2xl w-full max-w-lg rounded-2xl border border-slate-200 p-6 shadow-2xl relative">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200">
       <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-400">
+        <div class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-600">
           <i data-lucide="key" class="w-4 h-4"></i>
         </div>
         <div>
           <h3 class="text-sm font-bold text-white">Admin Authentication & JWT</h3>
-          <p class="text-[11px] text-slate-400">Calls POST /admin/login (crypto bcrypt verified)</p>
+          <p class="text-[11px] text-slate-500">Calls POST /admin/login (crypto bcrypt verified)</p>
         </div>
       </div>
-      <button onclick="closeModal('admin-login-modal')" class="text-slate-400 hover:text-white p-1 rounded-lg">
+      <button onclick="closeModal('admin-login-modal')" class="text-slate-500 hover:text-white p-1 rounded-lg">
         <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
 
     <form onsubmit="submitAdminLogin(event)" class="mt-4 space-y-4">
       <div>
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Email Address</label>
-        <input type="email" id="login-a-email" value="admin@pas.com" required placeholder="admin@pas.com" class="w-full bg-dark-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"/>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
+        <input type="email" id="login-a-email" value="admin@pas.com" required placeholder="admin@pas.com" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"/>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Password</label>
-        <input type="password" id="login-a-password" value="admin123" required placeholder="Password" class="w-full bg-dark-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"/>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+        <input type="password" id="login-a-password" value="admin123" required placeholder="Password" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"/>
       </div>
       <div class="flex items-center justify-between pt-1">
-        <span class="text-[11px] text-slate-400">Default: <code class="text-sky-300 font-mono">admin@pas.com</code> / <code class="text-sky-300 font-mono">admin123</code></span>
+        <span class="text-[11px] text-slate-500">Default: <code class="text-sky-300 font-mono">admin@pas.com</code> / <code class="text-sky-300 font-mono">admin123</code></span>
         <button type="submit" id="btn-admin-login-submit" class="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-md flex items-center gap-2">
           <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
           <span>Authenticate & Get JWT</span>
@@ -2456,46 +2457,46 @@ tailwind.config = {
     </form>
 
     <!-- Token Output Box -->
-    <div id="admin-login-result" class="hidden mt-4 pt-4 border-t border-slate-800 space-y-3">
+    <div id="admin-login-result" class="hidden mt-4 pt-4 border-t border-slate-200 space-y-3">
       <div class="flex items-center justify-between">
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-950/60 border border-emerald-800 text-emerald-300">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           <span>HTTP 200 — JWT Issued</span>
         </span>
-        <button onclick="copyAdminToken()" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-700 hover:bg-slate-800 text-xs text-slate-300">
+        <button onclick="copyAdminToken()" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-800 text-xs text-slate-700">
           <i data-lucide="copy" class="w-3.5 h-3.5"></i>
           <span id="btn-copy-token-text">Copy JWT</span>
         </button>
       </div>
 
       <div>
-        <label class="block text-[11px] font-semibold text-slate-400 mb-1">Access Token (Bearer)</label>
-        <textarea id="admin-jwt-output" readonly rows="3" class="w-full font-mono text-[11px] bg-dark-900 border border-slate-700 rounded-lg p-2.5 text-sky-300 focus:outline-none"></textarea>
+        <label class="block text-[11px] font-semibold text-slate-500 mb-1">Access Token (Bearer)</label>
+        <textarea id="admin-jwt-output" readonly rows="3" class="w-full font-mono text-[11px] bg-white border border-slate-200 rounded-lg p-2.5 text-sky-300 focus:outline-none"></textarea>
       </div>
 
-      <div class="bg-dark-900/80 border border-slate-800 rounded-lg p-3 text-[11px] font-mono text-slate-300 space-y-1">
-        <div class="text-slate-400 font-semibold mb-1">Admin Profile Payload:</div>
-        <div id="admin-jwt-meta" class="text-emerald-400 whitespace-pre-wrap"></div>
+      <div class="bg-white/80 border border-slate-200 rounded-lg p-3 text-[11px] font-mono text-slate-700 space-y-1">
+        <div class="text-slate-500 font-semibold mb-1">Admin Profile Payload:</div>
+        <div id="admin-jwt-meta" class="text-emerald-600 whitespace-pre-wrap"></div>
       </div>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="detail-overlay" onclick="closeModalOnOverlay(event, 'detail-overlay')">
-  <div class="bg-dark-900 border border-slate-700 rounded-2xl w-full max-w-2xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+  <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
           <i data-lucide="eye" class="w-4 h-4"></i>
         </div>
         <h3 id="modal-title" class="text-sm font-bold text-white">Document Details</h3>
       </div>
-      <button onclick="closeModal('detail-overlay')" class="text-slate-400 hover:text-white transition">
+      <button onclick="closeModal('detail-overlay')" class="text-slate-500 hover:text-white transition">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
     <div class="mt-4">
-      <pre id="modal-body" class="bg-dark-950 border border-slate-800 rounded-xl p-4 text-[11px] text-indigo-300 font-mono overflow-auto max-h-[500px]"></pre>
+      <pre id="modal-body" class="bg-dark-950 border border-slate-200 rounded-xl p-4 text-[11px] text-indigo-600 font-mono overflow-auto max-h-[500px]"></pre>
     </div>
   </div>
 </div>
@@ -2545,7 +2546,7 @@ async function loadStoreFromApi(showToast = false) {
   const syncStatus = document.getElementById('store-sync-status');
   if (syncStatus) {
     syncStatus.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span><span>Connecting…</span>';
-    syncStatus.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-950/60 border border-amber-800/80 text-amber-300';
+    syncStatus.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-50 border border-amber-200 text-amber-700';
   }
 
   try {
@@ -2558,7 +2559,7 @@ async function loadStoreFromApi(showToast = false) {
       renderStoreFields(storeCache);
       if (syncStatus) {
         syncStatus.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span>API Live</span>';
-        syncStatus.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-950/60 border border-emerald-800/80 text-emerald-300';
+        syncStatus.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 border border-emerald-200 text-emerald-700';
       }
       if (showToast) alert('Store settings reloaded live from backend API!');
     }
@@ -2567,7 +2568,7 @@ async function loadStoreFromApi(showToast = false) {
     renderStoreFields(storeCache);
     if (syncStatus) {
       syncStatus.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-red-400"></span><span>API Offline</span>';
-      syncStatus.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-red-950/60 border border-red-800/80 text-red-300';
+      syncStatus.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-rose-50 border border-rose-200 text-rose-700';
     }
   }
 }
@@ -2906,7 +2907,7 @@ async function loadOverview() {
 
 // ── Customers ──
 async function loadCustomers() {
-  document.getElementById('c-tbody').innerHTML = '<tr><td colspan="9" class="py-8 text-center text-slate-300 font-medium">Loading customers…</td></tr>';
+  document.getElementById('c-tbody').innerHTML = '<tr><td colspan="9" class="py-8 text-center text-slate-700 font-medium">Loading customers…</td></tr>';
   const search = document.getElementById('c-search')?.value.trim() || '';
   const plan = document.getElementById('c-filter-plan')?.value || '';
   const source = document.getElementById('c-filter-source')?.value || '';
@@ -2928,57 +2929,57 @@ async function loadCustomers() {
 function renderCustomers(rows) {
   const tb = document.getElementById('c-tbody');
   if (!rows.length) {
-    tb.innerHTML = '<tr><td colspan="10" class="py-8 text-center text-slate-300 font-medium">No customer records found</td></tr>';
+    tb.innerHTML = '<tr><td colspan="10" class="py-8 text-center text-slate-700 font-medium">No customer records found</td></tr>';
     return;
   }
   tb.innerHTML = rows.map(c => {
     const isPaid = c.payment_type === 'paid';
-    const planClass = isPaid ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-sky-500/10 text-sky-400 border-sky-500/20';
+    const planClass = isPaid ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-sky-50 text-sky-700 border-sky-200';
     const hasActiveSession = Boolean(c.login_session_id);
     const sessionBadge = hasActiveSession
       ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950/70 border border-emerald-800 text-emerald-300"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>1 Active Dev</span>'
-      : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 border border-slate-700 text-slate-400">0 Active</span>';
+      : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 border border-slate-200 text-slate-500">0 Active</span>';
 
-    return `<tr class="hover:bg-slate-800/40 transition">
-      <td class="py-3 px-4 font-mono font-bold text-white">${c.phone_number}</td>
+    return `<tr class="hover:bg-slate-50 transition">
+      <td class="py-3 px-4 font-mono font-bold text-slate-900">${c.phone_number}</td>
       <td class="py-3 px-4">${sessionBadge}</td>
-      <td class="py-3 px-4 font-mono font-medium text-amber-300">
+      <td class="py-3 px-4 font-mono font-medium text-amber-700">
         <span class="mr-1">${c.otp || '—'}</span>
         <button onclick="refreshOtp('${c.phone_number}', this)" title="Refresh OTP" class="text-indigo-400 hover:text-indigo-300 font-bold ml-1">↻</button>
       </td>
-      <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">${c.source}</span></td>
+      <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-700 border border-slate-200">${c.source}</span></td>
       <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-semibold border ${planClass}">${c.payment_type}</span></td>
-      <td class="py-3 px-4 font-mono text-slate-300">${c.referral_code_generated || '—'}</td>
-      <td class="py-3 px-4 text-slate-300 font-medium">${formatSeconds(c.time_remaining_seconds)}</td>
-      <td class="py-3 px-4 text-slate-400 text-[11px]">${c.time_expiry ? c.time_expiry.replace('T', ' ').split('.')[0] : '—'}</td>
-      <td class="py-3 px-4 text-slate-400 text-[11px]">${c.last_login ? c.last_login.replace('T', ' ').split('.')[0] : '—'}</td>
+      <td class="py-3 px-4 font-mono text-slate-700">${c.referral_code_generated || '—'}</td>
+      <td class="py-3 px-4 text-slate-700 font-medium">${formatSeconds(c.time_remaining_seconds)}</td>
+      <td class="py-3 px-4 text-slate-500 text-[11px]">${c.time_expiry ? c.time_expiry.replace('T', ' ').split('.')[0] : '—'}</td>
+      <td class="py-3 px-4 text-slate-500 text-[11px]">${c.last_login ? c.last_login.replace('T', ' ').split('.')[0] : '—'}</td>
       <td class="py-3 px-4 text-right">
         <div class="flex items-center justify-end gap-1.5 flex-wrap">
           <!-- Minutes History Tracker Button -->
-          <button onclick="openUsageHistoryModal('${c.phone_number}')" title="Track minutes consumed & session history" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-semibold transition">
-            <i data-lucide="history" class="w-3.5 h-3.5 text-cyan-400"></i>
+          <button onclick="openUsageHistoryModal('${c.phone_number}')" title="Track minutes consumed & session history" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 text-cyan-700 text-xs font-semibold transition">
+            <i data-lucide="history" class="w-3.5 h-3.5 text-cyan-600"></i>
             <span>Minutes History</span>
           </button>
 
           <!-- Force Logout Button -->
-          <button onclick="forceLogoutCustomer('${c.phone_number}', this)" title="Force logout all active sessions on all devices" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-950/40 hover:bg-red-900/50 border border-red-800/80 text-red-300 text-xs font-semibold transition">
-            <i data-lucide="log-out" class="w-3.5 h-3.5 text-red-400"></i>
+          <button onclick="forceLogoutCustomer('${c.phone_number}', this)" title="Force logout all active sessions on all devices" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold transition">
+            <i data-lucide="log-out" class="w-3.5 h-3.5 text-rose-600"></i>
             <span>Force Logout</span>
           </button>
 
-          <button onclick="openAttemptsModal('${c.phone_number}')" title="View Login Attempts" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-300 text-xs font-semibold transition">
+          <button onclick="openAttemptsModal('${c.phone_number}')" title="View Login Attempts" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 text-xs font-semibold transition">
             <i data-lucide="key-round" class="w-3.5 h-3.5 text-amber-400"></i>
             <span>Attempts</span>
           </button>
-          <button onclick='openRechargeModal(${JSON.stringify(c)})' title="Recharge Customer Time & Plan" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-300 text-xs font-semibold transition">
-            <i data-lucide="zap" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <button onclick='openRechargeModal(${JSON.stringify(c)})' title="Recharge Customer Time & Plan" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 text-xs font-semibold transition">
+            <i data-lucide="zap" class="w-3.5 h-3.5 text-emerald-600"></i>
             <span>Recharge</span>
           </button>
-          <button onclick='openEditCustomerModal(${JSON.stringify(c)})' title="Edit Customer Details" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-300 text-xs font-semibold transition">
+          <button onclick='openEditCustomerModal(${JSON.stringify(c)})' title="Edit Customer Details" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-semibold transition">
             <i data-lucide="edit-3" class="w-3.5 h-3.5 text-indigo-400"></i>
             <span>Edit</span>
           </button>
-          <button onclick='showDetail(${JSON.stringify(c)})' title="View JSON" class="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-medium transition">
+          <button onclick='showDetail(${JSON.stringify(c)})' title="View JSON" class="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium transition">
             <i data-lucide="eye" class="w-3.5 h-3.5"></i>
           </button>
         </div>
@@ -3109,7 +3110,7 @@ async function submitEditCustomer() {
 async function openAttemptsModal(phone) {
   document.getElementById('att-title').textContent = `Login Attempts`;
   document.getElementById('att-subtitle').textContent = `Phone: ${phone}`;
-  document.getElementById('att-tbody').innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-300 font-medium">Loading attempts…</td></tr>';
+  document.getElementById('att-tbody').innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-700 font-medium">Loading attempts…</td></tr>';
   openModal('attempts-overlay');
 
   try {
@@ -3117,29 +3118,29 @@ async function openAttemptsModal(phone) {
     const events = res.data || [];
     renderAttempts(events);
   } catch (err) {
-    document.getElementById('att-tbody').innerHTML = `<tr><td colspan="7" class="py-8 text-center text-red-400 font-medium">Failed: ${err.message}</td></tr>`;
+    document.getElementById('att-tbody').innerHTML = `<tr><td colspan="7" class="py-8 text-center text-rose-600 font-medium">Failed: ${err.message}</td></tr>`;
   }
 }
 
 function renderAttempts(events) {
   const tb = document.getElementById('att-tbody');
   if (!events.length) {
-    tb.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-300 font-medium">No login attempts recorded yet for this customer.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-700 font-medium">No login attempts recorded yet for this customer.</td></tr>';
     return;
   }
   tb.innerHTML = events.map(e => {
     const geo = e.geolocation || {};
     const loc = [geo.city, geo.country].filter(Boolean).join(', ') || '—';
-    const typeBadge = e.is_bot ? '<span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">bot</span>' : e.is_mobile ? '<span class="px-2 py-0.5 rounded text-[10px] bg-amber-950 text-amber-400 border border-amber-800">mobile</span>' : '<span class="px-2 py-0.5 rounded text-[10px] bg-blue-950 text-blue-400 border border-blue-800">pc</span>';
-    return `<tr class="hover:bg-slate-800/40 transition">
-      <td class="py-3 px-3.5 text-slate-300 font-mono text-[11px]">${e.timestamp ? e.timestamp.replace('T', ' ').split('.')[0] : '—'}</td>
-      <td class="py-3 px-3.5 font-mono text-indigo-300">${e.ip_address || '—'}</td>
-      <td class="py-3 px-3.5 text-slate-300">${loc}</td>
-      <td class="py-3 px-3.5 text-slate-300">${e.browser?.family || '—'} on ${e.os?.family || '—'}</td>
-      <td class="py-3 px-3.5 text-slate-400">${(e.device?.brand || '') + ' ' + (e.device?.model || '') || '—'}</td>
+    const typeBadge = e.is_bot ? '<span class="px-2 py-0.5 rounded text-[10px] bg-rose-50 text-rose-700 border border-rose-200">bot</span>' : e.is_mobile ? '<span class="px-2 py-0.5 rounded text-[10px] bg-amber-50 text-amber-700 border border-amber-200">mobile</span>' : '<span class="px-2 py-0.5 rounded text-[10px] bg-blue-50 text-blue-700 border border-blue-200">pc</span>';
+    return `<tr class="hover:bg-slate-50 transition">
+      <td class="py-3 px-3.5 text-slate-700 font-mono text-[11px]">${e.timestamp ? e.timestamp.replace('T', ' ').split('.')[0] : '—'}</td>
+      <td class="py-3 px-3.5 font-mono text-indigo-600">${e.ip_address || '—'}</td>
+      <td class="py-3 px-3.5 text-slate-700">${loc}</td>
+      <td class="py-3 px-3.5 text-slate-700">${e.browser?.family || '—'} on ${e.os?.family || '—'}</td>
+      <td class="py-3 px-3.5 text-slate-500">${(e.device?.brand || '') + ' ' + (e.device?.model || '') || '—'}</td>
       <td class="py-3 px-3.5">${typeBadge}</td>
       <td class="py-3 px-3.5 text-right">
-        <button onclick='showDetail(${JSON.stringify(e)})' class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs transition">
+        <button onclick='showDetail(${JSON.stringify(e)})' class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs transition">
           <i data-lucide="eye" class="w-3.5 h-3.5"></i>
           <span>View</span>
         </button>
@@ -3159,7 +3160,7 @@ function openRechargeModal(customer) {
 
   currentRecMode = 'add';
   document.getElementById('btn-mode-add').className = 'py-1.5 rounded-md text-xs font-semibold bg-indigo-600 text-white transition';
-  document.getElementById('btn-mode-sub').className = 'py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition';
+  document.getElementById('btn-mode-sub').className = 'py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-white transition';
 
   document.getElementById('rec-time-val').value = 30;
   document.getElementById('rec-time-unit').value = 'min';
@@ -3176,10 +3177,10 @@ function setRecMode(mode) {
   currentRecMode = mode;
   if (mode === 'add') {
     document.getElementById('btn-mode-add').className = 'py-1.5 rounded-md text-xs font-semibold bg-indigo-600 text-white transition';
-    document.getElementById('btn-mode-sub').className = 'py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition';
+    document.getElementById('btn-mode-sub').className = 'py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-white transition';
   } else {
     document.getElementById('btn-mode-sub').className = 'py-1.5 rounded-md text-xs font-semibold bg-red-600 text-white transition';
-    document.getElementById('btn-mode-add').className = 'py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition';
+    document.getElementById('btn-mode-add').className = 'py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-white transition';
   }
   updateRecPreview();
 }
@@ -3212,7 +3213,7 @@ function updateRecPreview() {
   const current = Number(currentCustomerForRec.time_remaining_seconds) || 0;
   const newBalance = Math.max(0, current + delta);
   const sign = delta >= 0 ? '+' : '';
-  const deltaColor = delta >= 0 ? 'text-emerald-400' : 'text-red-400';
+  const deltaColor = delta >= 0 ? 'text-emerald-600' : 'text-rose-600';
   const targetPlan = document.getElementById('rec-plan').value;
 
   document.getElementById('rec-preview').innerHTML = `Adjustment: <strong class="${deltaColor}">${sign}${delta}s (${sign}${Math.round(delta / 60)}m)</strong> &nbsp;➔&nbsp; ` +
@@ -3263,7 +3264,7 @@ async function submitRecharge() {
 
 // ── Recharges Page ──
 async function loadRecharges() {
-  document.getElementById('r-tbody').innerHTML = '<tr><td colspan="9" class="py-8 text-center text-slate-300 font-medium">Loading recharges…</td></tr>';
+  document.getElementById('r-tbody').innerHTML = '<tr><td colspan="9" class="py-8 text-center text-slate-700 font-medium">Loading recharges…</td></tr>';
   const phone = document.getElementById('r-search')?.value.trim() || '';
   const status = document.getElementById('r-filter-status')?.value || '';
   const source = document.getElementById('r-filter-source')?.value || '';
@@ -3286,28 +3287,28 @@ async function loadRecharges() {
 function renderRecharges(rows) {
   const tb = document.getElementById('r-tbody');
   if (!rows.length) {
-    tb.innerHTML = '<tr><td colspan="9" class="py-8 text-center text-slate-300 font-medium">No recharge transactions found</td></tr>';
+    tb.innerHTML = '<tr><td colspan="9" class="py-8 text-center text-slate-700 font-medium">No recharge transactions found</td></tr>';
     return;
   }
   tb.innerHTML = rows.map(r => {
     const delta = Number(r.time_delta_seconds) || 0;
     const deltaSign = delta >= 0 ? '+' : '';
-    const deltaColor = delta >= 0 ? 'text-emerald-400' : 'text-red-400';
-    return `<tr class="hover:bg-slate-800/40 transition">
-      <td class="py-3 px-4 font-mono font-bold text-white">${r.phone_number}</td>
-      <td class="py-3 px-4 font-semibold text-slate-200">₹${(Number(r.amount) || 0).toFixed(2)}</td>
+    const deltaColor = delta >= 0 ? 'text-emerald-600' : 'text-rose-600';
+    return `<tr class="hover:bg-slate-50 transition">
+      <td class="py-3 px-4 font-mono font-bold text-slate-900">${r.phone_number}</td>
+      <td class="py-3 px-4 font-semibold text-slate-800">₹${(Number(r.amount) || 0).toFixed(2)}</td>
       <td class="py-3 px-4 font-semibold ${deltaColor}">${deltaSign}${delta}s (${deltaSign}${Math.round(delta / 60)}m)</td>
       <td class="py-3 px-4">
-        <span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 border border-slate-700">${r.previous_payment_type}</span>
+        <span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-500 border border-slate-200">${r.previous_payment_type}</span>
         <span class="text-slate-500 mx-1">➔</span>
-        <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">${r.new_payment_type}</span>
+        <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-semibold">${r.new_payment_type}</span>
       </td>
-      <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-indigo-950 text-indigo-300 border border-indigo-800">${r.source || 'manual'}</span></td>
+      <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200">${r.source || 'manual'}</span></td>
       <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800">${r.payment_status || 'completed'}</span></td>
-      <td class="py-3 px-4 text-slate-400 text-[11px]">${r.created_at ? r.created_at.replace('T', ' ').split('.')[0] : '—'}</td>
-      <td class="py-3 px-4 text-slate-400 text-[11px] truncate max-w-xs">${r.notes || '—'}</td>
+      <td class="py-3 px-4 text-slate-500 text-[11px]">${r.created_at ? r.created_at.replace('T', ' ').split('.')[0] : '—'}</td>
+      <td class="py-3 px-4 text-slate-500 text-[11px] truncate max-w-xs">${r.notes || '—'}</td>
       <td class="py-3 px-4 text-right">
-        <button onclick='showDetail(${JSON.stringify(r)})' class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs transition">
+        <button onclick='showDetail(${JSON.stringify(r)})' class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs transition">
           <i data-lucide="eye" class="w-3.5 h-3.5"></i>
           <span>View</span>
         </button>
@@ -3324,7 +3325,7 @@ function rechargePage(d) {
 
 // ── Events ──
 async function loadEvents() {
-  document.getElementById('e-tbody').innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-300 font-medium">Loading events…</td></tr>';
+  document.getElementById('e-tbody').innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-700 font-medium">Loading events…</td></tr>';
   const phone = document.getElementById('e-search')?.value.trim() || '';
   const deviceType = document.getElementById('e-filter-device')?.value || '';
 
@@ -3345,23 +3346,23 @@ async function loadEvents() {
 function renderEvents(rows) {
   const tb = document.getElementById('e-tbody');
   if (!rows.length) {
-    tb.innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-300 font-medium">No login events recorded</td></tr>';
+    tb.innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-700 font-medium">No login events recorded</td></tr>';
     return;
   }
   tb.innerHTML = rows.map(e => {
     const geo = e.geolocation || {};
     const loc = [geo.city, geo.country].filter(Boolean).join(', ') || '—';
-    const typeBadge = e.is_bot ? '<span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">bot</span>' : e.is_mobile ? '<span class="px-2 py-0.5 rounded text-[10px] bg-amber-950 text-amber-400 border border-amber-800">mobile</span>' : '<span class="px-2 py-0.5 rounded text-[10px] bg-blue-950 text-blue-400 border border-blue-800">pc</span>';
-    return `<tr class="hover:bg-slate-800/40 transition">
-      <td class="py-3 px-4 font-mono font-bold text-white">${e.phone_number}</td>
-      <td class="py-3 px-4 font-mono text-indigo-300">${e.ip_address || '—'}</td>
-      <td class="py-3 px-4 text-slate-300">${loc}</td>
-      <td class="py-3 px-4 text-slate-300">${e.browser?.family || '—'} on ${e.os?.family || '—'}</td>
-      <td class="py-3 px-4 text-slate-400">${(e.device?.brand || '') + ' ' + (e.device?.model || '') || '—'}</td>
+    const typeBadge = e.is_bot ? '<span class="px-2 py-0.5 rounded text-[10px] bg-rose-50 text-rose-700 border border-rose-200">bot</span>' : e.is_mobile ? '<span class="px-2 py-0.5 rounded text-[10px] bg-amber-50 text-amber-700 border border-amber-200">mobile</span>' : '<span class="px-2 py-0.5 rounded text-[10px] bg-blue-50 text-blue-700 border border-blue-200">pc</span>';
+    return `<tr class="hover:bg-slate-50 transition">
+      <td class="py-3 px-4 font-mono font-bold text-slate-900">${e.phone_number}</td>
+      <td class="py-3 px-4 font-mono text-indigo-600">${e.ip_address || '—'}</td>
+      <td class="py-3 px-4 text-slate-700">${loc}</td>
+      <td class="py-3 px-4 text-slate-700">${e.browser?.family || '—'} on ${e.os?.family || '—'}</td>
+      <td class="py-3 px-4 text-slate-500">${(e.device?.brand || '') + ' ' + (e.device?.model || '') || '—'}</td>
       <td class="py-3 px-4">${typeBadge}</td>
-      <td class="py-3 px-4 text-slate-400 text-[11px] font-mono">${e.timestamp ? e.timestamp.replace('T', ' ').split('.')[0] : '—'}</td>
+      <td class="py-3 px-4 text-slate-500 text-[11px] font-mono">${e.timestamp ? e.timestamp.replace('T', ' ').split('.')[0] : '—'}</td>
       <td class="py-3 px-4 text-right">
-        <button onclick='showDetail(${JSON.stringify(e)})' class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs transition">
+        <button onclick='showDetail(${JSON.stringify(e)})' class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs transition">
           <i data-lucide="eye" class="w-3.5 h-3.5"></i>
           <span>View</span>
         </button>
@@ -3378,7 +3379,7 @@ function eventPage(d) {
 
 // ── Sessions Page (Customer Sessions & Invalidation) ──
 async function loadSessions() {
-  document.getElementById('s-tbody').innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-300 font-medium">Loading sessions…</td></tr>';
+  document.getElementById('s-tbody').innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-700 font-medium">Loading sessions…</td></tr>';
   const q = document.getElementById('s-search')?.value.trim() || '';
   const status = document.getElementById('s-filter-status')?.value || 'all';
   let query = `/admin/sessions?skip=${sSkip}&limit=${PER}&status=${encodeURIComponent(status)}`;
@@ -3397,21 +3398,21 @@ async function loadSessions() {
 function renderSessions(rows) {
   const tb = document.getElementById('s-tbody');
   if (!rows.length) {
-    tb.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-300 font-medium">No customer login sessions found</td></tr>';
+    tb.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-700 font-medium">No customer login sessions found</td></tr>';
     return;
   }
   tb.innerHTML = rows.map(s => {
     const isActive = Boolean(s.login_session_id);
     const statusBadge = isActive
-      ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-emerald-950/70 text-emerald-300 border border-emerald-800 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Active</span>'
-      : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 border border-slate-700 font-medium">Terminated</span>';
+      ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Active</span>'
+      : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-500 border border-slate-200 font-medium">Terminated</span>';
 
     const sessionCell = isActive
-      ? `<span class="font-mono text-purple-300 text-[11px] truncate max-w-xs block">${s.login_session_id}</span>`
+      ? `<span class="font-mono text-purple-700 text-[11px] truncate max-w-xs block">${s.login_session_id}</span>`
       : `<span class="font-mono text-slate-500 text-[11px] italic">Logged out / None</span>`;
 
     const actionBtn = isActive
-      ? `<button onclick="terminateSession('${s.phone_number}', this)" class="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold transition" title="Log out customer from active session">
+      ? `<button onclick="terminateSession('${s.phone_number}', this)" class="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-700 text-xs font-semibold transition" title="Log out customer from active session">
            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
            <span>Logout Session</span>
          </button>`
@@ -3420,12 +3421,12 @@ function renderSessions(rows) {
            <span>Activate Session</span>
          </button>`;
 
-    return `<tr class="hover:bg-slate-800/40 transition">
-      <td class="py-3 px-4 font-mono font-bold text-white">${s.phone_number}</td>
+    return `<tr class="hover:bg-slate-50 transition">
+      <td class="py-3 px-4 font-mono font-bold text-slate-900">${s.phone_number}</td>
       <td class="py-3 px-4">${sessionCell}</td>
-      <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800">${s.payment_type || 'free'}</span></td>
-      <td class="py-3 px-4 text-slate-300 text-xs">${s.device_id || '—'}</td>
-      <td class="py-3 px-4 text-slate-400 text-[11px] font-mono">${s.last_login ? s.last_login.replace('T', ' ').split('.')[0] : '—'}</td>
+      <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-100 text-indigo-700 border border-indigo-200">${s.payment_type || 'free'}</span></td>
+      <td class="py-3 px-4 text-slate-700 text-xs">${s.device_id || '—'}</td>
+      <td class="py-3 px-4 text-slate-500 text-[11px] font-mono">${s.last_login ? s.last_login.replace('T', ' ').split('.')[0] : '—'}</td>
       <td class="py-3 px-4">${statusBadge}</td>
       <td class="py-3 px-4 text-right">${actionBtn}</td>
     </tr>`;
@@ -3516,7 +3517,7 @@ async function openUsageHistoryModal(phone) {
   document.getElementById('usage-stat-device').textContent = 'Loading…';
   
   const tbody = document.getElementById('usage-history-tbody');
-  tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">Fetching usage events…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-500">Fetching usage events…</td></tr>';
   
   openModal('customer-usage-modal');
 
@@ -3532,41 +3533,41 @@ async function openUsageHistoryModal(phone) {
 
     const list = data.usage_history || [];
     if (!list.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400 font-medium">No minute consumption events recorded yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-500 font-medium">No minute consumption events recorded yet.</td></tr>';
       return;
     }
 
     const actionColors = {
-      login_consumption: 'bg-amber-950/70 text-amber-300 border-amber-800',
+      login_consumption: 'bg-amber-950/70 text-amber-700 border-amber-800',
       initial_login_consumption: 'bg-sky-950/70 text-sky-300 border-sky-800',
-      device_switch_force_logout: 'bg-purple-950/70 text-purple-300 border-purple-800',
+      device_switch_force_logout: 'bg-purple-950/70 text-purple-700 border-purple-800',
       admin_force_logout: 'bg-red-950/70 text-red-300 border-red-800'
     };
 
     tbody.innerHTML = list.map(h => {
-      const badge = actionColors[h.action] || 'bg-slate-800 text-slate-300 border-slate-700';
+      const badge = actionColors[h.action] || 'bg-slate-800 text-slate-700 border-slate-200';
       const consumedDisplay = h.minutes_consumed > 0
         ? `<span class="text-rose-400 font-bold">-${h.minutes_consumed}m (${h.seconds_consumed}s)</span>`
-        : `<span class="text-slate-400">0m</span>`;
+        : `<span class="text-slate-500">0m</span>`;
 
       const prevMin = roundMinutes(h.previous_time_remaining_seconds);
       const newMin = roundMinutes(h.new_time_remaining_seconds);
-      const balanceDisplay = `<span class="text-slate-300">${prevMin}m</span> → <span class="text-emerald-400 font-bold">${newMin}m</span>`;
+      const balanceDisplay = `<span class="text-slate-700">${prevMin}m</span> → <span class="text-emerald-600 font-bold">${newMin}m</span>`;
 
       return `
-        <tr class="hover:bg-slate-800/40 transition">
-          <td class="py-2.5 px-3 text-slate-300">${h.created_at ? new Date(h.created_at).toLocaleString() : '—'}</td>
+        <tr class="hover:bg-slate-50 transition">
+          <td class="py-2.5 px-3 text-slate-700">${h.created_at ? new Date(h.created_at).toLocaleString() : '—'}</td>
           <td class="py-2.5 px-3">
             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border ${badge}">
               ${escapeHtml(h.action)}
             </span>
-            <div class="text-[10px] text-slate-400 mt-0.5">${escapeHtml(h.description || '')}</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">${escapeHtml(h.description || '')}</div>
           </td>
           <td class="py-2.5 px-3 font-semibold">${consumedDisplay}</td>
           <td class="py-2.5 px-3">${balanceDisplay}</td>
-          <td class="py-2.5 px-3 text-slate-400">
+          <td class="py-2.5 px-3 text-slate-500">
             <div>${escapeHtml(h.device_id || '—')}</div>
-            <div class="text-[10px] text-slate-300 truncate max-w-xs">${escapeHtml(h.session_id ? h.session_id.slice(0, 12) + '…' : '—')}</div>
+            <div class="text-[10px] text-slate-700 truncate max-w-xs">${escapeHtml(h.session_id ? h.session_id.slice(0, 12) + '…' : '—')}</div>
           </td>
         </tr>
       `;
@@ -3574,7 +3575,7 @@ async function openUsageHistoryModal(phone) {
 
     lucide.createIcons();
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-red-400">Error: ${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-rose-600">Error: ${err.message}</td></tr>`;
   }
 }
 
@@ -3608,7 +3609,7 @@ async function forceLogoutCustomer(phone, btn) {
 
 async function loadAdmins() {
   const tbody = document.getElementById('a-tbody');
-  tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-400 font-medium"><span class="animate-pulse">Loading admins…</span></td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-500 font-medium"><span class="animate-pulse">Loading admins…</span></td></tr>';
 
   const s = document.getElementById('a-search')?.value || '';
   const r = document.getElementById('a-filter-role')?.value || '';
@@ -3627,14 +3628,14 @@ async function loadAdmins() {
     renderAdmins(aData);
   } catch (err) {
     console.error('Failed to load admins:', err);
-    tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-red-400">Failed to load admin accounts.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-rose-600">Failed to load admin accounts.</td></tr>';
   }
 }
 
 function renderAdmins(list) {
   const tbody = document.getElementById('a-tbody');
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-400">No admin accounts found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-500">No admin accounts found.</td></tr>';
     document.getElementById('a-page-info').textContent = 'Showing 0 of 0 admins';
     document.getElementById('a-prev').disabled = true;
     document.getElementById('a-next').disabled = true;
@@ -3642,23 +3643,23 @@ function renderAdmins(list) {
   }
 
   const roleColors = {
-    superadmin: 'bg-purple-950/70 text-purple-300 border-purple-800',
+    superadmin: 'bg-purple-950/70 text-purple-700 border-purple-800',
     admin: 'bg-indigo-950/70 text-indigo-300 border-indigo-800',
     moderator: 'bg-cyan-950/70 text-cyan-300 border-cyan-800'
   };
 
   tbody.innerHTML = list.map(a => {
-    const roleBadge = roleColors[a.role] || 'bg-slate-800 text-slate-300 border-slate-700';
+    const roleBadge = roleColors[a.role] || 'bg-slate-800 text-slate-700 border-slate-200';
     const statusBadge = a.is_active
       ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950/60 border border-emerald-800 text-emerald-300"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Active</span>'
-      : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 border border-slate-700 text-slate-400">Inactive</span>';
+      : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 border border-slate-200 text-slate-500">Inactive</span>';
 
     const initials = (a.name || 'A').slice(0, 2).toUpperCase();
     const createdStr = a.created_at ? new Date(a.created_at).toLocaleString() : '—';
-    const loginStr = a.last_login ? new Date(a.last_login).toLocaleString() : '<span class="text-slate-400 italic">Never</span>';
+    const loginStr = a.last_login ? new Date(a.last_login).toLocaleString() : '<span class="text-slate-500 italic">Never</span>';
 
     return `
-      <tr class="hover:bg-slate-800/40 transition">
+      <tr class="hover:bg-slate-50 transition">
         <td class="py-3 px-4">
           <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-500/30 text-sky-300 flex items-center justify-center font-bold text-xs">
@@ -3666,7 +3667,7 @@ function renderAdmins(list) {
             </div>
             <div>
               <div class="font-bold text-white text-xs">${escapeHtml(a.name || 'Admin')}</div>
-              <div class="text-[11px] text-slate-400 font-mono">${escapeHtml(a.email)}</div>
+              <div class="text-[11px] text-slate-500 font-mono">${escapeHtml(a.email)}</div>
             </div>
           </div>
         </td>
@@ -3679,25 +3680,25 @@ function renderAdmins(list) {
           ${statusBadge}
         </td>
         <td class="py-3 px-4">
-          <span class="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-400 bg-emerald-950/30 border border-emerald-900/50 px-2 py-0.5 rounded">
-            <i data-lucide="lock" class="w-3 h-3 text-emerald-400"></i>
+          <span class="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-600 bg-emerald-950/30 border border-emerald-900/50 px-2 py-0.5 rounded">
+            <i data-lucide="lock" class="w-3 h-3 text-emerald-600"></i>
             <span>bcrypt-hashed</span>
           </span>
         </td>
-        <td class="py-3 px-4 text-slate-300 text-[11px]">
+        <td class="py-3 px-4 text-slate-700 text-[11px]">
           ${createdStr}
         </td>
-        <td class="py-3 px-4 text-slate-300 text-[11px]">
+        <td class="py-3 px-4 text-slate-700 text-[11px]">
           ${loginStr}
         </td>
         <td class="py-3 px-4 text-right">
           <div class="flex items-center justify-end gap-1.5">
-            <button onclick="openEditAdminModal('${escapeHtml(a.email)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition" title="Edit Admin">
+            <button onclick="openEditAdminModal('${escapeHtml(a.email)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-100 text-slate-800 text-xs font-medium border border-slate-200 transition" title="Edit Admin">
               <i data-lucide="edit-3" class="w-3 h-3 text-indigo-400"></i>
               <span>Edit</span>
             </button>
             <button onclick="openAdminLoginModal('${escapeHtml(a.email)}')" class="inline-flex items-center gap-1 px-2 py-1 rounded bg-sky-950/50 hover:bg-sky-900/60 text-sky-300 text-xs font-medium border border-sky-800 transition" title="Test Token Login">
-              <i data-lucide="key" class="w-3 h-3 text-sky-400"></i>
+              <i data-lucide="key" class="w-3 h-3 text-sky-600"></i>
               <span>Token</span>
             </button>
           </div>
